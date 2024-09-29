@@ -15,8 +15,6 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 # Include the router with the /api prefix
 app.include_router(items.router, prefix="/api")
 
-# Serve static files
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/", include_in_schema=False)
 async def serve_index():
@@ -35,6 +33,9 @@ async def custom_swagger_ui_html():
 @app.get("/api/openapi.json", include_in_schema=False)
 async def get_open_api_endpoint():
     return get_openapi(title="API Docs", version="1.0.0", routes=app.routes)
+
+# Serve static files
+app.mount("/", StaticFiles(directory="frontend"), name="static")
 
 # Make sure to export the 'app' variable
 __all__ = ['app']
