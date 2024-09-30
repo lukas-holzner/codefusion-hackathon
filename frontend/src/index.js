@@ -58,11 +58,7 @@ const theme = createTheme({
 	},
 })
 
-const element = document.getElementById('root')
-if (!element) {
-	throw new Error('No root element found')
-}
-const root = ReactDOM.createRoot(element)
+const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
