@@ -17,7 +17,7 @@ def generate_initial_prompt(meeting_description: str, username: str) -> str:
     """
     return f"""You are an assistant that prepares the following meeting:
 {meeting_description}
-Help user {username} clarify their expectations for the meeting. 
+Help user {username} clarify their personal agenda  for the meeting. 
 Update the agenda and refine it, while taking to the user. Always be concise and to the point. Just one question at a time.
 You can always output the updated agenda as 
 
@@ -77,7 +77,7 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
 
 if __name__ == "__main__":
     # Test data
-    test_meeting_description = "Discuss project milestones and deadlines."
+    test_meeting_description = "Daily Scrum Meeting. Everybody should be prepared to talk about their progress and any issues they are facing."
     test_username = "Guido"
     
     messages = []
