@@ -4,70 +4,67 @@ from typing import List
 
 from .. import schemas
 from ..database import get_db
+from ..models import Meeting
 
 router = APIRouter()
 
-# User CRUD endpoints
-@router.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_username(db, username=user.username)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return crud.create_user(db=db, user=user)
+# Meeting CRUD operations
+def get_meeting(db: Session, meeting_id: int):
+    return db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
-@router.get("/users/", response_model=List[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
-    return users
+def get_meetings(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Meeting).offset(skip).limit(limit).all()
 
-@router.get("/users/{user_id}", response_model=schemas.UserWithMeetings)
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=user_id)
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+def create_meeting(db: Session, meeting: schemas.MeetingCreate):
+    db_meeting = Meeting(**meeting.dict())
+    db.add(db_meeting)
+    db.commit()
+    db.refresh(db_meeting)
+    return db_meeting
 
-@router.put("/users/{user_id}", response_model=schemas.User)
-def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.update_user(db, user_id=user_id, user=user)
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+def update_meeting(db: Session, meeting_id: int, meeting: schemas.MeetingCreate):
+    db_meeting = get_meeting(db, meeting_id)
+    if db_meeting:
+        for key, value in meeting.dict().items():
+            setattr(db_meeting, key, value)
+        db.commit()
+        db.refresh(db_meeting)
+    return db_meeting
 
-@router.delete("/users/{user_id}", response_model=schemas.User)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.delete_user(db, user_id=user_id)
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+def delete_meeting(db: Session, meeting_id: int):
+    db_meeting = get_meeting(db, meeting_id)
+    if db_meeting:
+        db.delete(db_meeting)
+        db.commit()
+    return db_meeting
 
 # Meeting CRUD endpoints
 @router.post("/meetings/", response_model=schemas.Meeting)
-def create_meeting(meeting: schemas.MeetingCreate, db: Session = Depends(get_db)):
-    return crud.create_meeting(db=db, meeting=meeting)
+def create_meeting_route(meeting: schemas.MeetingCreate, db: Session = Depends(get_db)):
+    return create_meeting(db=db, meeting=meeting)
 
 @router.get("/meetings/", response_model=List[schemas.Meeting])
 def read_meetings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    meetings = crud.get_meetings(db, skip=skip, limit=limit)
+    meetings = get_meetings(db, skip=skip, limit=limit)
     return meetings
 
 @router.get("/meetings/{meeting_id}", response_model=schemas.MeetingWithUser)
 def read_meeting(meeting_id: int, db: Session = Depends(get_db)):
-    db_meeting = crud.get_meeting(db, meeting_id=meeting_id)
+    db_meeting = get_meeting(db, meeting_id=meeting_id)
     if db_meeting is None:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return db_meeting
 
 @router.put("/meetings/{meeting_id}", response_model=schemas.Meeting)
-def update_meeting(meeting_id: int, meeting: schemas.MeetingCreate, db: Session = Depends(get_db)):
-    db_meeting = crud.update_meeting(db, meeting_id=meeting_id, meeting=meeting)
+def update_meeting_route(meeting_id: int, meeting: schemas.MeetingCreate, db: Session = Depends(get_db)):
+    db_meeting = update_meeting(db, meeting_id=meeting_id, meeting=meeting)
     if db_meeting is None:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return db_meeting
 
 @router.delete("/meetings/{meeting_id}", response_model=schemas.Meeting)
-def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
-    db_meeting = crud.delete_meeting(db, meeting_id=meeting_id)
+def delete_meeting_route(meeting_id: int, db: Session = Depends(get_db)):
+    db_meeting = delete_meeting(db, meeting_id=meeting_id)
     if db_meeting is None:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return db_meeting
