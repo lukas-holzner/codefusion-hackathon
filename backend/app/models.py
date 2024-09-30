@@ -44,7 +44,7 @@ class Conversation(Base):
 
     user = relationship("User", back_populates="conversations")
     meeting = relationship("Meeting", back_populates="conversations")
-    messages = relationship("ChatMessage", back_populates="conversation")
+    chat_messages = relationship("ChatMessage", back_populates="conversation")  # Changed from 'messages' to 'chat_messages'
     meeting_agenda = relationship("MeetingAgenda", back_populates="conversation")
 
 class ChatMessage(Base):
@@ -56,7 +56,7 @@ class ChatMessage(Base):
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     conversation_id = Column(Integer, ForeignKey("conversations.id"))
 
-    conversation = relationship("Conversation", back_populates="messages")
+    conversation = relationship("Conversation", back_populates="chat_messages")
 
 class MeetingAgenda(Base):
     __tablename__ = "meeting_agendas"

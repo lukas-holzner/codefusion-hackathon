@@ -38,6 +38,9 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
     Process the user's message and return the assistant's response along with the agenda if present.
     """
     try:
+        # Debug: Print input messages
+        print("Debug: Input messages:", messages)
+
         # Call the OpenAI API with the system message and messages list
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -50,12 +53,19 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
         )
         assistant_response = response.choices[0].message.content
 
+        # Debug: Print raw assistant response
+        print("Debug: Raw assistant response:", assistant_response)
+
         # Parse agenda if present
         agenda = None
         if "<agenda>" in assistant_response and "</agenda>" in assistant_response:
             agenda_start = assistant_response.index("<agenda>") + len("<agenda>")
             agenda_end = assistant_response.index("</agenda>")
             agenda_str = assistant_response[agenda_start:agenda_end].strip()
+            
+            # Debug: Print agenda string before parsing
+            print("Debug: Agenda string before parsing:", agenda_str)
+            
             agenda = json.loads(f"[{agenda_str}]")
             
             # Remove the agenda from the assistant's response
@@ -64,17 +74,23 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
         # Remove #EOC# marker from the response
         assistant_response = assistant_response.replace("#EOC#", "").strip()
         
+        # Debug: Print final processed response and agenda
+        print("Debug: Processed response:", assistant_response)
+        print("Debug: Processed agenda:", agenda)
+
         return {
             "response": assistant_response,
             "agenda": agenda,
-            "conversation_ended": "#EOC#" in response.choices[0].message.content  # Check for #EOC# in the original response
+            "conversation_ended": "#EOC#" in response.choices[0].message.content
         }
     except Exception as e:
-        print(f"Error in creating chat completion: {e}")
+        # Debug: Print full exception details
+        import traceback
+        print(f"Debug: Full exception details:\n{traceback.format_exc()}")
         return {
             "response": "I apologize, but I encountered an error while processing your request.",
             "agenda": None,
-            "conversation_ended": False  # Add this line
+            "conversation_ended": False
         }
 
 if __name__ == "__main__":
