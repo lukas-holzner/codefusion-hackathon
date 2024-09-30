@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -57,7 +59,7 @@ const getDayName = (date) => {
 	return date.toLocaleDateString('en-US', { weekday: 'long' })
 }
 
-export const Drawer = ({
+export const MeetingsDrawer = ({
 	isLargeScreen,
 	mobileOpen,
 	handleDrawerToggle,

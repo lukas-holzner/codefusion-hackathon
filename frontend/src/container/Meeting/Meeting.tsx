@@ -1,5 +1,7 @@
+// @ts-nocheck
+
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   Box, 
@@ -18,6 +20,19 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 import './Meeting.css';
 import { useUser } from '../../utils/userProvider';
+
+const deleteConversation = async ({ meetingId, userId }) => {
+	const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation`, {
+	  method: 'DELETE',
+	  headers: {
+		'Content-Type': 'application/json',
+	  },
+	});
+	if (!response.ok) {
+	  throw new Error('Failed to delete conversation');
+	}
+	return response.json();
+};
 
 const fetchConversation = async ({ meetingId, userId }) => {
 	const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation`);
@@ -44,6 +59,8 @@ const sendMessage = async ({ message, meetingId, userId }) => {
 export const Meeting = () => {
 	const { id: meetingId } = useParams();
 	const { userId } = useUser();
+	const navigate = useNavigate();
+
 	const [messages, setMessages] = useState([]);
 	const [inputMessage, setInputMessage] = useState('');
 	const messagesEndRef = useRef(null);
@@ -59,6 +76,17 @@ export const Meeting = () => {
 		enabled: !!userId && !!meetingId,
 	});
 
+	const deleteMutation = useMutation({
+		mutationFn: deleteConversation,
+		onSuccess: () => {
+		  queryClient.invalidateQueries(['conversation', meetingId, userId]);
+		  setMessages([]);
+		},
+		onError: (error) => {
+		  console.error('Error deleting conversation:', error);
+		}
+	});
+
 	useEffect(scrollToBottom, [messages]);
 
 	useEffect(() => {
@@ -70,13 +98,23 @@ export const Meeting = () => {
 	const mutation = useMutation({
 		mutationFn: sendMessage,
 		onSuccess: (data) => {
-			setMessages(data.chat_messages);
+			setMessages(() => data.chat_messages);
+
+			if (data.finished) {
+				navigate(`/meeting/${meetingId}/agenda`);
+			}
 		},
 		onError: (error) => {
 			console.error('Error:', error);
 			setMessages(prevMessages => [...prevMessages, { message: 'Error: Could not get response', author: 'assistant' }]);
 		}
 	});
+
+	const handleDeleteConversation = () => {
+		if (window.confirm('Are you sure you want to delete this conversation?')) {
+		  deleteMutation.mutate({ meetingId, userId });
+		}
+	};
 
 	const handleSendMessage = () => {
 		if (inputMessage.trim() === '') return;
@@ -134,6 +172,15 @@ export const Meeting = () => {
 					))}
 					<div ref={messagesEndRef} />
 				</List>
+				<Button
+					variant="outlined"
+					color="secondary"
+					onClick={handleDeleteConversation}
+					disabled={deleteMutation.isPending}
+					sx={{ ml: 1 }}
+				>
+					{deleteMutation.isPending ? 'Clearing...' : 'Clear Conversation'}
+				</Button>
 			</div>
 			<Box sx={{ display: 'flex', mb: 2 }}>
 				<TextField

@@ -1,4 +1,4 @@
-import React,{ useState } from 'react'
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
 	Box,
@@ -8,7 +8,7 @@ import {
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { AppBar } from '../../components/AppBar/AppBar'
-import { MeetingsDrawer } from '../../components/MeetingsDrawer/MeetingsDrawer'
+import { MenuDrawer } from '../../components/MeetingsDrawer/MeetingsDrawer'
 
 const drawerWidth = 350
 
@@ -36,7 +36,7 @@ export const Home = () => {
 						flexShrink: { sm: 0 },
 					}}
 				>
-					<MeetingsDrawer
+					<MenuDrawer
 						isLargeScreen={isLargeScreen}
 						mobileOpen={mobileOpen}
 						handleDrawerToggle={handleDrawerToggle}
