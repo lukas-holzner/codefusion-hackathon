@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
 from . import models
 from .routers import items
@@ -11,6 +12,24 @@ import os
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+origins = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+URL = os.getenv("URL")
+
+if URL is not None:
+    origins.append(URL)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include the router with the /api prefix
 app.include_router(items.router, prefix="/api")
