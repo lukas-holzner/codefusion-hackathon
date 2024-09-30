@@ -45,6 +45,10 @@ export const Meeting = () => {
 
 	useEffect(scrollToBottom, [messages]);
 
+	useEffect(() => {
+		setMessages([]);
+	}, [id]);
+
 	const mutation = useMutation({
 		mutationFn: sendMessage,
 		onSuccess: (data) => {
@@ -80,6 +84,7 @@ export const Meeting = () => {
 								justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
 								mb: 2,
 							}}
+							className="MessageItem"
 						>
 							<Box
 								sx={{
@@ -98,8 +103,10 @@ export const Meeting = () => {
 										bgcolor: message.sender === 'user' ? 'primary.light' : 'secondary.light',
 										maxWidth: '70%',
 										borderRadius: 4,
-										borderTopRightRadius: message.sender === 'user' ? 0 : 4,
-										borderTopLeftRadius: message.sender === 'user' ? 4 : 0,
+										borderTopRightRadius: message.sender === 'user' ? 0 : 16,
+										borderTopLeftRadius: message.sender === 'user' ? 16 : 0,
+										wordBreak: 'break-word',
+										whiteSpace: 'pre-wrap',
 									}}
 								>
 									<Typography variant="body1">{message.text}</Typography>
@@ -113,6 +120,7 @@ export const Meeting = () => {
 			<Box sx={{ display: 'flex', mb: 2 }}>
 				<TextField
 					fullWidth
+					autoFocus
 					variant="outlined"
 					placeholder="Type your message..."
 					value={inputMessage}
