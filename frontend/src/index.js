@@ -9,6 +9,8 @@ import { Home } from './container/Home/Home'
 import { Meeting } from './container/Meeting/Meeting'
 import reportWebVitals from './reportWebVitals'
 import { PrepNow } from './container/PrepNow/PrepNow'
+import AgendaList from './container/AgendaList/AgendaList'
+import MeetingRoot from './container/Meeting/MeetingRoot'
 
 const queryClient = new QueryClient()
 
@@ -18,13 +20,23 @@ const router = createHashRouter([
 		element: <Home />,
 		children: [
 			{
-				path: '/meeting/:id',
-				element: <Meeting />,
+				path: '/meeting',
+				element: <MeetingRoot />,
+        children: [
+          {
+            path: '/meeting/:id',
+            element: <Meeting />,
+          },
+          {
+            path: '/meeting/:id/agenda',
+            element: <AgendaList />,
+          },
+        ],
 			},
-			{
-				path: '/prep-now',
-				element: <PrepNow />,
-			},
+      {
+        path: '/prep-now',
+        element: <PrepNow />,
+      }
 		],
 	},
 ])
