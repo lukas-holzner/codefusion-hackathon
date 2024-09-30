@@ -1,0 +1,16 @@
+.MeetingContainer {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px);
+}
+
+.ChatContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: auto;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+}

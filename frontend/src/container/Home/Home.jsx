@@ -1,17 +1,14 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Routes, Route } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import {
 	Box,
 	CssBaseline,
 	Toolbar,
-	Typography,
 	useMediaQuery,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { AppBar } from '../../components/AppBar/AppBar'
 import { Drawer } from '../../components/drawer/Drawer'
-import { Meeting } from '../Meeting/Meeting'
 
 const drawerWidth = 350
 
@@ -59,20 +56,7 @@ export const Home = () => {
 					}}
 				>
 					<Toolbar />
-					<Routes>
-						<Route
-							path="/"
-							element={
-								<Typography>
-									Welcome to the Meeting App!
-								</Typography>
-							}
-						/>
-						<Route
-							path="/meeting/:id"
-							element={<Meeting />}
-						/>
-					</Routes>
+					<Outlet />
 				</Box>
 			</Box>
 		</div>
