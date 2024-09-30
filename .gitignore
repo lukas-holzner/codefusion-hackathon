@@ -101,3 +101,6 @@ jspm_packages/
 *.bak
 *.tmp
 *.temp
+*.db
+
+/data
