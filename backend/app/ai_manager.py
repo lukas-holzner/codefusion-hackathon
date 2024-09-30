@@ -40,6 +40,7 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
     """
     try:
         # Debug: Print input messages
+        print("Debug: System message:", system_message)
         print("Debug: Input messages:", messages)
 
         # Call the OpenAI API with the system message and messages list
@@ -70,7 +71,7 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
             agenda = json.loads(f"[{agenda_str}]")
             
             # Remove the agenda from the assistant's response
-            assistant_response = assistant_response[:agenda_start-len("<agenda>")] + assistant_response[agenda_end+len("</agenda>"):]
+            #assistant_response = assistant_response[:agenda_start-len("<agenda>")] + assistant_response[agenda_end+len("</agenda>"):]
         
         # Remove #EOC# marker from the response
         assistant_response = assistant_response.replace("#EOC#", "").strip()

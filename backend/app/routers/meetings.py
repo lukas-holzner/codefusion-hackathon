@@ -11,6 +11,7 @@ from ..models import Conversation, Meeting, ChatMessage, MeetingAgenda
 from ..util.openai import init_conversation, generate_response
 
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,10 @@ def add_message(db: Session, meeting_id: int, user_id: int, message: schemas.Cha
 
     # Create MeetingAgenda objects only if agenda exists and is not empty
     if "agenda" in assistant_response and assistant_response["agenda"]:
+        # Delete existing agenda items
+        db.query(MeetingAgenda).filter(MeetingAgenda.conversation_id == db_conversation.id).delete()
+        
+        # Add new agenda items
         for agenda_item in assistant_response["agenda"]:
             db_conversation.meeting_agenda.append(MeetingAgenda(
                 agenda_item=agenda_item,
@@ -171,11 +176,21 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
         db_conversation = create_new_conversation(db, meeting_id=meeting_id, user_id=user_id)
     else:
         db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
+
+    # Process messages to remove <agenda> tags
+    for message in db_conversation.chat_messages:
+        message.message = re.sub(r'<agenda>.*?</agenda>', '', message.message, flags=re.DOTALL)
+        
     return db_conversation
 
 @router.post("/meetings/{meeting_id}/{user_id}/conversation/message", response_model=schemas.Conversation)
 def router_add_message(meeting_id: int, user_id: int, message: str, db: Session = Depends(get_db)):
-    return add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
+    ret = add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
+
+    for message in ret.chat_messages:
+        message.message = re.sub(r'<agenda>.*?</agenda>', '', message.message, flags=re.DOTALL)
+  
+    return ret
 
 @router.delete("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
 def delete_conversation(meeting_id: int, user_id: int, db: Session = Depends(get_db)):
