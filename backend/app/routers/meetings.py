@@ -24,8 +24,12 @@ def get_conversation(db: Session, meeting_id: int, user_id: int) -> Conversation
 
 def create_new_conversation(db: Session, meeting_id: int, user_id: int):
     db_conversation = Conversation(meeting_id=meeting_id, user_id=user_id, system_prompt="")
+    db.add(db_conversation)
+    db.commit() 
 
-    prompt = generate_initial_prompt("test", "Guido")
+    db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
+    
+    prompt = generate_initial_prompt(db_conversation.meeting.description, db_conversation.user.username)
     db_conversation.system_prompt = prompt
     initial_message = process_user_message(prompt, [])
 
