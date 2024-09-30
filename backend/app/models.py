@@ -41,6 +41,7 @@ class Conversation(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     meeting_id = Column(Integer, ForeignKey("meetings.id"))
     system_prompt = Column(String, default="Test", nullable=True)
+    finished = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="conversations")
     meeting = relationship("Meeting", back_populates="conversations")

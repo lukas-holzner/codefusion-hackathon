@@ -11,12 +11,13 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def generate_initial_prompt(meeting_description: str, username: str) -> str:
+def generate_initial_prompt(meeting_title: str, meeting_description: str, username: str) -> str:
     """
     Generate the initial system message for the meeting preparation.
     """
     return f"""You are an assistant that prepares the following meeting:
-{meeting_description}
+Title: {meeting_title}
+Description: {meeting_description}
 Help user {username} clarify their personal agenda  for the meeting. 
 Update the agenda and refine it, while taking to the user. Make sure the agenda is concrete and specific.
 Ask the user questions to clarify their agenda and make it concrete, so that the meeting can be more productive.
