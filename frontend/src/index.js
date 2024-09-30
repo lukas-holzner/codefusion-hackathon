@@ -1,13 +1,34 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import {
+  createHashRouter,
+  RouterProvider,
+} from "react-router-dom";
+
 import './index.css';
-import App from './App';
+import Home from './container/Home/Home';
 import reportWebVitals from './reportWebVitals';
+
+
+const router = createHashRouter([
+  {
+    path: "/",
+    element: <Home />,
+    children: [
+      // {
+      //   path: "team",
+      //   element: <Team />,
+      //   loader: teamLoader,
+      // },
+    ],
+  },
+]);
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 
