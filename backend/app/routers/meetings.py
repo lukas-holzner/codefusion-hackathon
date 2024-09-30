@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from backend.app.routers.users import get_user
+from app.routers.users import get_user
 from .. import schemas
 from ..database import get_db
 from ..models import Conversation, Meeting, ChatMessage
@@ -20,9 +20,9 @@ def get_meetings(db: Session, skip: int = 0, limit: int = 100):
 def get_conversation(db: Session, meeting_id: int, user_id: int):
     return db.query(Conversation).filter(Conversation.meeting_id == meeting_id, Conversation.user_id == user_id).first()
 
-def create_conversation(db: Session, meeting_id: int, user_id: int):
-    db_conversation = Conversation(meeting_id=meeting_id, user_id=user_id)
-    db_conversation.chat_messages = init_conversation(db_conversation.meeting.meeting_type.system_prompt)
+def create_new_conversation(db: Session, meeting_id: int, user_id: int):
+    db_conversation = Conversation(meeting_id=meeting_id, user_id=user_id, system_prompt="")
+    db_conversation.chat_messages = init_conversation(db_conversation)
     db.add(db_conversation)
     db.commit() 
     db.refresh(db_conversation)
@@ -48,7 +48,7 @@ def add_message(db: Session, meeting_id: int, user_id: int, message: schemas.Cha
     
 
 def create_meeting(db: Session, meeting: schemas.MeetingCreate):
-    db_meeting = Meeting(**meeting.dict())
+    db_meeting = Meeting(**meeting.model_dump())
     db.add(db_meeting)
     db.commit()
     db.refresh(db_meeting)
@@ -130,7 +130,7 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
     if get_user(db, user_id=user_id) is None:
         raise HTTPException(status_code=404, detail="User not found")   
     if get_conversation(db, meeting_id=meeting_id, user_id=user_id) is None:
-        db_conversation = create_conversation(db, meeting_id=meeting_id, user_id=user_id)
+        db_conversation = create_new_conversation(db, meeting_id=meeting_id, user_id=user_id)
     else:
         db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
     return db_conversation

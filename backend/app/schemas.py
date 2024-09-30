@@ -15,25 +15,22 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
-class MeetingType(Enum):
-    DAILY = "daily"
-    RETRO = "retro"
-    KICKOFF = "kickoff"
-
 class MeetingBase(BaseModel):
     title: str
     description: Optional[str] = None
     date: datetime
-    meeting_type: MeetingType
+    meeting_type: str  # Change this to a string
+    
 
-class MeetingCreate(MeetingBase):
-    pass
 
 class Meeting(MeetingBase):
     id: int
 
     class Config:
         from_attributes = True
+
+class MeetingCreate(MeetingBase):
+    pass
 
 class UserSchema(User):
     meetings: List[Meeting] = []
@@ -55,7 +52,7 @@ class Conversation(BaseModel):
     meeting_id: int
     chat_messages: list[ChatMessage] = []
     meeting_agenda: list[MeetingAgenda] = []
-
+    system_prompt: str = "EMPTY"
 
 
 
