@@ -26,21 +26,13 @@ class Meeting(Base):
     title = Column(String, index=True)
     description = Column(String)
     date = Column(DateTime)
-    meeting_type_id = Column(Integer, ForeignKey("meeting_types.id"))
+    meeting_type = Column(String)  # Change this to a String column
 
-    # Update this relationship
-    users = relationship("User", secondary=user_meeting, back_populates="meetings")
-    meeting_type = relationship("MeetingType", back_populates="meetings")
+
+    # Add this relationship
+    users = relationship("User", secondary="user_meeting", back_populates="meetings")
+    # Add this relationship
     conversations = relationship("Conversation", back_populates="meeting")
-
-class MeetingType(Base):
-    __tablename__ = "meeting_types"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    system_prompt = Column(Text)
-
-    meetings = relationship("Meeting", back_populates="meeting_type")
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -48,6 +40,7 @@ class Conversation(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     meeting_id = Column(Integer, ForeignKey("meetings.id"))
+    system_prompt = Column(String, default="Test", nullable=True)
 
     user = relationship("User", back_populates="conversations")
     meeting = relationship("Meeting", back_populates="conversations")
@@ -73,6 +66,7 @@ class MeetingAgenda(Base):
     completed = Column(Boolean, default=False)
     conversation_id = Column(Integer, ForeignKey("conversations.id"))
 
-    conversation = relationship("Conversation", back_populates="meeting_agenda")    
+    conversation = relationship("Conversation", back_populates="meeting_agenda")
+
 
 
