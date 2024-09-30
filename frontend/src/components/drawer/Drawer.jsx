@@ -47,13 +47,9 @@ export const Drawer = ({
                     </Button>
                 </div>
 				<List>
-                    <ListItem disablePadding component="h2" alignItems="center" sx={{justifyContent: 'center'}}>
-                        ------ KW 40 ------
+                    <ListItem disablePadding component="h2"sx={{justifyContent: 'flex-start', paddingLeft: '12px'}}>
+                        KW 40
                     </ListItem>
-					<ListItem component="h4" alignItems="center" sx={{justifyContent: 'center', margin: '0px'}}>
-                        Today
-                    </ListItem>
-                    <Divider />
 					<ListItem disablePadding>
 						<ListItemButton component={Link} to="/meeting/daily">
 							<ListItemIcon>
@@ -110,8 +106,8 @@ export const Drawer = ({
 							<ListItemText primary="Retro" />
 						</ListItemButton>
 					</ListItem>
-                    <ListItem disablePadding component="h2" alignItems="center" sx={{justifyContent: 'center'}}>
-                        ------ KW 41 ------
+                    <ListItem disablePadding component="h2"sx={{justifyContent: 'flex-start', paddingLeft: '12px'}}>
+                        KW 41
                     </ListItem>
                     <ListItem component="h4" alignItems="center" sx={{justifyContent: 'center', margin: '0px'}}>
                         Monday
