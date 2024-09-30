@@ -177,6 +177,14 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
 def router_add_message(meeting_id: int, user_id: int, message: str, db: Session = Depends(get_db)):
     return add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
 
+@router.delete("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
+def delete_conversation(meeting_id: int, user_id: int, db: Session = Depends(get_db)):
+    db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
+    if db_conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    db.delete(db_conversation)
+    db.commit()
+    return db_conversation  
 
 
 

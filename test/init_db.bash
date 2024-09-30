@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set the base URL
+#BASE_URL="https://codefusion.lholz.de"
 BASE_URL="http://127.0.0.1:8000"
-
 # Function to make a POST request
 make_post_request() {
     local endpoint=$1
