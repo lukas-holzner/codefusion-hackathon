@@ -1,3 +1,3 @@
 export const Meeting = () => {
-	return <div>Meeting</div>
+	return <div>This is your Meeting</div>
 }

@@ -11,6 +11,7 @@ import {
 import { useTheme } from '@mui/material/styles'
 import { AppBar } from '../../components/AppBar/AppBar'
 import { Drawer } from '../../components/drawer/Drawer'
+import { Meeting } from '../Meeting/Meeting'
 
 const drawerWidth = 350
 
@@ -69,16 +70,11 @@ export const Home = () => {
 						/>
 						<Route
 							path="/meeting/:id"
-							element={<MeetingSelector />}
+							element={<Meeting />}
 						/>
 					</Routes>
 				</Box>
 			</Box>
 		</div>
 	)
-}
-
-// MeetingSelector component (in a separate file)
-export const MeetingSelector = () => {
-	// ... (previous MeetingSelector code)
 }
