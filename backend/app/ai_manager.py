@@ -18,9 +18,20 @@ def generate_initial_prompt(meeting_description: str, username: str) -> str:
     return f"""You are an assistant that prepares the following meeting:
 {meeting_description}
 Help user {username} clarify their expectations for the meeting. 
-After the expectations are clear, give the user a summary that they can accept. 
-Always be concise and to the point. Just one question at a time.
-If they accept the summary, output the summary as {{final_summary}} ... {{final_summary}} and say goodbye."""
+Update the agenda and refine it, while taking to the user. Always be concise and to the point. Just one question at a time.
+You can always output the updated agenda as 
+
+<agenda>
+"item1", "item2", "item3", ...
+</agenda>
+
+As soon as the user is happy with the agenda, output the agenda as 
+
+<final_agenda>
+"item1", "item2", "item3", ...
+</final_agenda>
+
+and say goodbye."""
 
 
 def process_user_message(system_message: str, messages: List[str]) -> str:
