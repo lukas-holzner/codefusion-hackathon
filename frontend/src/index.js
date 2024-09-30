@@ -11,6 +11,7 @@ import reportWebVitals from './reportWebVitals'
 import { PrepNow } from './container/PrepNow/PrepNow'
 import AgendaList from './container/AgendaList/AgendaList'
 import MeetingRoot from './container/Meeting/MeetingRoot'
+import { UserProvider } from './utils/userProvider'
 
 const queryClient = new QueryClient()
 
@@ -63,7 +64,9 @@ root.render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<ThemeProvider theme={theme}>
-				<RouterProvider router={router} />
+        <UserProvider>
+				    <RouterProvider router={router} />
+        </UserProvider>
 			</ThemeProvider>
 		</QueryClientProvider>
 	</React.StrictMode>
