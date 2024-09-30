@@ -84,6 +84,9 @@ def add_message(db: Session, meeting_id: int, user_id: int, message: schemas.Cha
                 completed=False
             ))
 
+    if "conversation_ended" in assistant_response and assistant_response["conversation_ended"]:
+        db_conversation.finished = True
+        
     db.commit()
     db.refresh(db_conversation)
     return db_conversation

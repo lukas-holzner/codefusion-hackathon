@@ -53,7 +53,7 @@ class Conversation(BaseModel):
     chat_messages: list[ChatMessage] = []
     meeting_agenda: list[MeetingAgenda] = []
     system_prompt: str = "EMPTY"
-
+    finished: bool = False
 
 
 
