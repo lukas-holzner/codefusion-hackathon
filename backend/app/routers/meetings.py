@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -17,12 +18,11 @@ def get_meeting(db: Session, meeting_id: int):
 def get_meetings(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Meeting).offset(skip).limit(limit).all()
 
-def get_conversation(db: Session, meeting_id: int, user_id: int):
+def get_conversation(db: Session, meeting_id: int, user_id: int) -> Conversation:
     return db.query(Conversation).filter(Conversation.meeting_id == meeting_id, Conversation.user_id == user_id).first()
 
 def create_new_conversation(db: Session, meeting_id: int, user_id: int):
     db_conversation = Conversation(meeting_id=meeting_id, user_id=user_id, system_prompt="")
-    db_conversation.chat_messages = init_conversation(db_conversation)
     db.add(db_conversation)
     db.commit() 
     db.refresh(db_conversation)
@@ -30,8 +30,6 @@ def create_new_conversation(db: Session, meeting_id: int, user_id: int):
 
 def update_conversation(db: Session, conversation: schemas.Conversation):
     db_conversation = get_conversation(db, meeting_id=conversation.meeting_id, user_id=conversation.user_id)
-    if db_conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
     db_conversation.chat_messages = conversation.chat_messages
     db_conversation.meeting_agenda = conversation.meeting_agenda
     db.commit()
@@ -43,8 +41,10 @@ def add_message(db: Session, meeting_id: int, user_id: int, message: schemas.Cha
     if db_conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     db_conversation.chat_messages.append(message)
+    db_conversation = generate_response(db_conversation)
     db.commit()
     db.refresh(db_conversation)
+    return db_conversation
     
 
 def create_meeting(db: Session, meeting: schemas.MeetingCreate):
@@ -117,13 +117,6 @@ def delete_meeting_route(meeting_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
-def read_conversation(meeting_id: int, user_id: int, db: Session = Depends(get_db)):
-    db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
-    if db_conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    return db_conversation
-
-@router.post("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
 def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get_db)):
     if get_meeting(db, meeting_id=meeting_id) is None:
         raise HTTPException(status_code=404, detail="Meeting not found")
@@ -136,10 +129,8 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
     return db_conversation
 
 @router.post("/meetings/{meeting_id}/{user_id}/conversation/message", response_model=schemas.Conversation)
-def add_message(meeting_id: int, user_id: int, message: schemas.ChatMessage, db: Session = Depends(get_db)):
-    conversation = add_message(db, meeting_id=meeting_id, user_id=user_id, message=message)
-    openai_response = generate_response(db, conversation=conversation)
-    return update_conversation(db, conversation=openai_response)
+def router_add_message(meeting_id: int, user_id: int, message: str, db: Session = Depends(get_db)):
+    return add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
 
     
 
