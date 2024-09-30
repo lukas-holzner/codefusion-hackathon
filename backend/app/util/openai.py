@@ -1,5 +1,5 @@
 from openai import OpenAI
-from app.schemas import ChatMessage, Conversation
+from app.models import  Conversation
 from datetime import datetime, timezone
 def init_conversation(conversation: Conversation) -> Conversation:
     #TODO: Implement this function
@@ -7,6 +7,6 @@ def init_conversation(conversation: Conversation) -> Conversation:
     return conversation
 
 # Evaluates if it's part of the conversation or should be added as a meeting agenda
-def generate_response(conversation: Conversation, meeting_type: str) -> Conversation:
+def generate_response(conversation: Conversation) -> Conversation:
     #TODO: Implement this function
     return conversation

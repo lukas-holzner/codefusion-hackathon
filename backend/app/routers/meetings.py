@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.routers.users import get_user
+from app.ai_manager import generate_initial_prompt, process_user_message
 from .. import schemas
 from ..database import get_db
-from ..models import Conversation, Meeting, ChatMessage
+from ..models import Conversation, Meeting, ChatMessage, MeetingAgenda
 from ..util.openai import init_conversation, generate_response
 
 router = APIRouter()
@@ -23,6 +24,12 @@ def get_conversation(db: Session, meeting_id: int, user_id: int) -> Conversation
 
 def create_new_conversation(db: Session, meeting_id: int, user_id: int):
     db_conversation = Conversation(meeting_id=meeting_id, user_id=user_id, system_prompt="")
+
+    prompt = generate_initial_prompt("test", "Guido")
+    db_conversation.system_prompt = prompt
+    initial_message = process_user_message(prompt, [])
+
+    db_conversation.chat_messages = [ChatMessage(message=initial_message["response"], author="assistant", timestamp=datetime.now())]
     db.add(db_conversation)
     db.commit() 
     db.refresh(db_conversation)
@@ -41,7 +48,27 @@ def add_message(db: Session, meeting_id: int, user_id: int, message: schemas.Cha
     if db_conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     db_conversation.chat_messages.append(message)
-    db_conversation = generate_response(db_conversation)
+
+    # Convert chat_messages to a list of strings
+    chat_history = [msg.message for msg in db_conversation.chat_messages]
+
+    assistant_response = process_user_message(db_conversation.system_prompt, chat_history)
+
+    # Add the assistant's response as a new ChatMessage
+    db_conversation.chat_messages.append(ChatMessage(
+        message=assistant_response["response"],
+        author="assistant",
+        timestamp=datetime.now()
+    ))
+
+    # Create MeetingAgenda objects only if agenda exists and is not empty
+    if "agenda" in assistant_response and assistant_response["agenda"]:
+        for agenda_item in assistant_response["agenda"]:
+            db_conversation.meeting_agenda.append(MeetingAgenda(
+                agenda_item=agenda_item,
+                completed=False
+            ))
+
     db.commit()
     db.refresh(db_conversation)
     return db_conversation
