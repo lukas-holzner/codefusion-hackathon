@@ -1,75 +1,84 @@
-import logo from '../../logo.svg'
-import './Home.css'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Routes, Route } from 'react-router-dom'
 import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  CircularProgress,
+	Box,
+	CssBaseline,
+	Toolbar,
+	Typography,
+	useMediaQuery,
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { AppBar } from '../../components/AppBar/AppBar'
+import { Drawer } from '../../components/drawer/Drawer'
 
-const fetchMeetingIds = async () => {
-  const response = await fetch('/api/meeting-ids')
-  if (!response.ok) {
-    throw new Error('Network response was not ok')
-  }
-  return response.json()
-}
+const drawerWidth = 350
 
 export const Home = () => {
-  const [selectedMeetingId, setSelectedMeetingId] = useState('')
+	const [mobileOpen, setMobileOpen] = useState(false)
+	const theme = useTheme()
+	const isLargeScreen = useMediaQuery(theme.breakpoints.up('sm'))
 
-  const {
-    data: meetingIds,
-    isPending,
-    isError,
-  } = useQuery({
-    queryKey: ['meetingIds'],
-    queryFn: fetchMeetingIds,
-  })
+	const handleDrawerToggle = () => {
+		setMobileOpen(!mobileOpen)
+	}
 
-  const handleMeetingIdChange = (event) => {
-    setSelectedMeetingId(event.target.value)
-  }
+	return (
+		<div>
+			<Box sx={{ display: 'flex' }}>
+				<CssBaseline />
+				<AppBar
+					handleDrawerToggle={handleDrawerToggle}
+					mobileOpen={mobileOpen}
+				/>
+				<Box
+					component="nav"
+					sx={{
+						width: { sm: mobileOpen ? '100%' : drawerWidth },
+						flexShrink: { sm: 0 },
+					}}
+				>
+					<Drawer
+						isLargeScreen={isLargeScreen}
+						mobileOpen={mobileOpen}
+						handleDrawerToggle={handleDrawerToggle}
+						drawerWidth={drawerWidth}
+					/>
+				</Box>
+				<Box
+					component="main"
+					sx={{
+						flexGrow: 1,
+						p: 3,
+						width: {
+							sm: `calc(100% - ${
+								mobileOpen ? '0px' : drawerWidth
+							}px)`,
+						},
+					}}
+				>
+					<Toolbar />
+					<Routes>
+						<Route
+							path="/"
+							element={
+								<Typography>
+									Welcome to the Meeting App!
+								</Typography>
+							}
+						/>
+						<Route
+							path="/meeting/:id"
+							element={<MeetingSelector />}
+						/>
+					</Routes>
+				</Box>
+			</Box>
+		</div>
+	)
+}
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Welcome to the codefusion frontend</p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-        <FormControl sx={{ m: 1, minWidth: 120 }}>
-          <InputLabel id="meeting-id-select-label">Meeting ID</InputLabel>
-          {isPending ? (
-            <CircularProgress size={24} />
-          ) : isError ? (
-            <p>Error loading meeting IDs</p>
-          ) : (
-            <Select
-              labelId="meeting-id-select-label"
-              id="meeting-id-select"
-              value={selectedMeetingId}
-              label="Meeting ID"
-              onChange={handleMeetingIdChange}
-            >
-              {meetingIds?.map((id) => (
-                <MenuItem key={id} value={id}>
-                  {id}
-                </MenuItem>
-              ))}
-            </Select>
-          )}
-        </FormControl>
-      </header>
-    </div>
-  )
+// MeetingSelector component (in a separate file)
+export const MeetingSelector = () => {
+	// ... (previous MeetingSelector code)
 }
