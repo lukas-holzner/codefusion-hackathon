@@ -10,6 +10,10 @@ from ..database import get_db
 from ..models import Conversation, Meeting, ChatMessage, MeetingAgenda
 from ..util.openai import init_conversation, generate_response
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 # Meeting CRUD operations
@@ -29,9 +33,16 @@ def create_new_conversation(db: Session, meeting_id: int, user_id: int):
 
     db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
     
-    prompt = generate_initial_prompt(db_conversation.meeting.description, db_conversation.user.username)
+    logger.debug(f"Generating initial prompt for meeting_id: {meeting_id}, user_id: {user_id}")
+    logger.debug(f"Meeting description: {db_conversation.meeting.description}")
+    logger.debug(f"User username: {db_conversation.user.username}")
+    
+    prompt = generate_initial_prompt(db_conversation.meeting.title, db_conversation.meeting.description, db_conversation.user.username)
+    logger.debug(f"Generated initial prompt: {prompt}")
+    
     db_conversation.system_prompt = prompt
     initial_message = process_user_message(prompt, [])
+    logger.debug(f"Initial AI response: {initial_message['response']}")
 
     db_conversation.chat_messages = [ChatMessage(message=initial_message["response"], author="assistant", timestamp=datetime.now())]
     db.add(db_conversation)
@@ -163,6 +174,6 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
 def router_add_message(meeting_id: int, user_id: int, message: str, db: Session = Depends(get_db)):
     return add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
 
-    
+
 
 
