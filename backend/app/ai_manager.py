@@ -18,7 +18,9 @@ def generate_initial_prompt(meeting_description: str, username: str) -> str:
     return f"""You are an assistant that prepares the following meeting:
 {meeting_description}
 Help user {username} clarify their personal agenda  for the meeting. 
-Update the agenda and refine it, while taking to the user. Always be concise and to the point. Just one question at a time.
+Update the agenda and refine it, while taking to the user. Make sure the agenda is concrete and specific.
+Ask the user questions to clarify their agenda and make it concrete, so that the meeting can be more productive.
+Always be concise and to the point. Just one question at a time.
 You can always output the updated agenda as 
 
 <agenda>
