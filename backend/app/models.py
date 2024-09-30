@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -22,3 +22,14 @@ class Meeting(Base):
 
     user = relationship("User", back_populates="meetings")
 
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    meeting_id = Column(Integer, ForeignKey("meetings.id"))
+    timestamp = Column(DateTime, default=lambda: datetime.now(UTC))
+
+    user = relationship("User")
+    meeting = relationship("Meeting")

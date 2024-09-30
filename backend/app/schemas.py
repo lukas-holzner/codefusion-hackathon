@@ -33,3 +33,13 @@ class UserWithMeetings(User):
 
 class MeetingWithUser(Meeting):
     user: User
+
+class ChatMessage(BaseModel):
+    id: int
+    message: str
+    user_id: int
+    meeting_id: int
+    timestamp: datetime
+
+class ChatMessageCreate(BaseModel):
+    message: str
