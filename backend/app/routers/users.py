@@ -55,7 +55,7 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = get_users(db, skip=skip, limit=limit)
     return users
 
-@router.get("/users/{user_id}", response_model=schemas.UserWithMeetings)
+@router.get("/users/{user_id}", response_model=schemas.UserSchema)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = get_user(db, user_id=user_id)
     if db_user is None:

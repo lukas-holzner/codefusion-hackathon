@@ -1,7 +1,13 @@
-from datetime import datetime, UTC
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from datetime import datetime, timezone
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, Table
 from sqlalchemy.orm import relationship
 from .database import Base
+
+# Add this association table
+user_meeting = Table('user_meeting', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('meeting_id', Integer, ForeignKey('meetings.id'), primary_key=True)
+)
 
 class User(Base):
     __tablename__ = "users"
@@ -9,7 +15,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
 
-    meetings = relationship("Meeting", back_populates="user")
+    # Update this relationship
+    meetings = relationship("Meeting", secondary=user_meeting, back_populates="users")
+    conversations = relationship("Conversation", back_populates="user")
 
 class Meeting(Base):
     __tablename__ = "meetings"
@@ -18,18 +26,53 @@ class Meeting(Base):
     title = Column(String, index=True)
     description = Column(String)
     date = Column(DateTime)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    meeting_type_id = Column(Integer, ForeignKey("meeting_types.id"))
 
-    user = relationship("User", back_populates="meetings")
+    # Update this relationship
+    users = relationship("User", secondary=user_meeting, back_populates="meetings")
+    meeting_type = relationship("MeetingType", back_populates="meetings")
+    conversations = relationship("Conversation", back_populates="meeting")
+
+class MeetingType(Base):
+    __tablename__ = "meeting_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    system_prompt = Column(Text)
+
+    meetings = relationship("Meeting", back_populates="meeting_type")
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    meeting_id = Column(Integer, ForeignKey("meetings.id"))
+
+    user = relationship("User", back_populates="conversations")
+    meeting = relationship("Meeting", back_populates="conversations")
+    messages = relationship("ChatMessage", back_populates="conversation")
+    meeting_agenda = relationship("MeetingAgenda", back_populates="conversation")
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, index=True)
     message = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    meeting_id = Column(Integer, ForeignKey("meetings.id"))
-    timestamp = Column(DateTime, default=lambda: datetime.now(UTC))
+    author = Column(String)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    conversation_id = Column(Integer, ForeignKey("conversations.id"))
 
-    user = relationship("User")
-    meeting = relationship("Meeting")
+    conversation = relationship("Conversation", back_populates="messages")
+
+class MeetingAgenda(Base):
+    __tablename__ = "meeting_agendas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    agenda_item = Column(String)
+    completed = Column(Boolean, default=False)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"))
+
+    conversation = relationship("Conversation", back_populates="meeting_agenda")    
+
+
