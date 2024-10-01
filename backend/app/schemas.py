@@ -55,5 +55,16 @@ class Conversation(BaseModel):
     system_prompt: str = "EMPTY"
     finished: bool = False
 
+class ConversationStatus(str, Enum):
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
+
+class MeetingStatusUser(BaseModel):
+    conversation_status: ConversationStatus
+    meeting: Meeting
+
+
+
 
 
