@@ -1,10 +1,11 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
+import os
 
 from app.routers.users import get_user
-from app.ai_manager import generate_initial_prompt, process_user_message
+from app.ai_manager import generate_initial_prompt, process_user_message, convert_audio_to_text
 from .. import schemas
 from ..database import get_db
 from ..models import Conversation, Meeting, ChatMessage, MeetingAgenda
@@ -16,6 +17,9 @@ import re
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+AUDIO_MIME_TYPES = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"]
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB in bytes
 
 # Meeting CRUD operations
 def get_meeting(db: Session, meeting_id: int):
@@ -191,6 +195,29 @@ def router_add_message(meeting_id: int, user_id: int, message: str, db: Session 
 
     ret.chat_messages = extract_and_format_agenda(ret.chat_messages)
     return ret
+
+@router.post("/meetings/{meeting_id}/{user_id}/conversation/message_audio", response_model=schemas.Conversation)
+async def router_add_message_audio(
+    meeting_id: int, 
+    user_id: int, 
+    audio_file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
+    # Check file type
+    if audio_file.content_type not in AUDIO_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only audio files are allowed.")
+    
+    # Check file size
+    file_size = await audio_file.read()
+    await audio_file.seek(0)  # Reset file pointer to the beginning
+    if len(file_size) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds the 5 MB limit.")
+
+    audio_text = await convert_audio_to_text(audio_file)
+    if audio_text is None:
+        raise HTTPException(status_code=500, detail="Failed to transcribe audio file.")
+    
+    return router_add_message(meeting_id, user_id, audio_text, db)
 
 @router.delete("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
 def delete_conversation(meeting_id: int, user_id: int, db: Session = Depends(get_db)):

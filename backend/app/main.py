@@ -32,8 +32,8 @@ app.add_middleware(
 )
 
 # Include the router with the /api prefix
-app.include_router(meetings.router, tags=["meetings"])
-app.include_router(users.router, tags=["users"])
+app.include_router(meetings.router, tags=["Meetings"])
+app.include_router(users.router, tags=["Users"])
 
 @app.get("/", include_in_schema=False)
 async def serve_index():

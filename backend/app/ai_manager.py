@@ -1,8 +1,10 @@
 import os
 from dotenv import load_dotenv
+from fastapi import UploadFile
 from openai import OpenAI
 from typing import List, Dict
 import json
+import io
 
 # Load environment variables from .env file
 load_dotenv()
@@ -134,3 +136,27 @@ if __name__ == "__main__":
             break
 
     print("Conversation ended.")
+
+async def convert_audio_to_text(audio_file: UploadFile):
+    """
+    Convert an uploaded audio file to text using OpenAI's Whisper model.
+    """
+    try:
+        # Read the file content
+        file_content = await audio_file.read()
+        
+        # Create a file-like object from the content
+        audio_file_obj = io.BytesIO(file_content)
+        audio_file_obj.name = audio_file.filename  # Set the filename
+
+        # Call the OpenAI API to transcribe the audio
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file_obj,
+            response_format="text"
+        )
+
+        return transcript
+    except Exception as e:
+        print(f"Error in audio transcription: {str(e)}")
+        return None
