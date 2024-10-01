@@ -116,7 +116,7 @@ export default function MeetingNotes() {
         variant="h4"
         gutterBottom
         sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Agenda for {meetingDetails?.title}
+        {meetingDetails?.title} Agenda
         <Switch
           onChange={() => setHideDoneFlag(!hideDoneFlag)}
           checked={!hideDoneFlag}
@@ -149,7 +149,7 @@ export default function MeetingNotes() {
         </List>
         {
           (notes.length > 0 && visibleNotes?.length === 0) &&
-          <Typography>
+          <Typography sx={{textAlign: 'center', padding: '16px'}}>
             Done!
           </Typography>
         }

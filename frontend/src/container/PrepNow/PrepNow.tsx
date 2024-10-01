@@ -23,6 +23,8 @@ interface MeetingFormData {
   description: string;
   date: Date | null;
   meeting_type: string;
+  purpose?: string;
+  context?: string;
 }
 
 const createMeeting = async (meetingData: MeetingFormData): Promise<any> => {
@@ -44,7 +46,7 @@ const createMeeting = async (meetingData: MeetingFormData): Promise<any> => {
 export const PrepNow: React.FC = () => {
   const nowIsh = new Date()
   nowIsh.setMinutes(0)
-  nowIsh.setHours(nowIsh.getHours() + 1 )
+  nowIsh.setHours(nowIsh.getHours() + 1)
 
   const [formData, setFormData] = useState<MeetingFormData>({
     title: "",
@@ -165,6 +167,32 @@ export const PrepNow: React.FC = () => {
               <MenuItem value="other">Other</MenuItem>
             </Select>
           </FormControl>
+          {formData.meeting_type === 'other' && (
+            <>
+              <TextField
+                fullWidth
+                label="Purpose"
+                name="purpose"
+                value={formData.purpose}
+                onChange={handleChange}
+                margin="normal"
+                multiline
+                rows={4}
+              />
+
+              <TextField
+                fullWidth
+                label="Context"
+                name="context"
+                value={formData.context}
+                onChange={handleChange}
+                margin="normal"
+                multiline
+                rows={4}
+              />
+
+            </>
+          )}
           <Button
             type="submit"
             variant="contained"

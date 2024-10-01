@@ -157,7 +157,7 @@ export const Meeting: React.FC = () => {
 			>
 				<Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }} className="MeetingHeader">
 					<Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
-						Meeting: {meetingDetails ? meetingDetails.title : '. . .'}
+						{meetingDetails ? meetingDetails.title : 'Meeting: . . .'}
 					</Typography>
 					{isMobile && hasAgenda && (
 						<IconButton onClick={() => setIsAgendaDrawerOpen(true)}>
