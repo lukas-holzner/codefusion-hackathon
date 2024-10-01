@@ -76,7 +76,7 @@ export default function AgendaList() {
   });
 
   useEffect(() => {
-    if(agendaItems.meeting_agenda.length === 0) {
+    if(agendaItems && agendaItems.meeting_agenda.length === 0) {
       navigate(`/meeting/${id}`);
     }
   }, [agendaItems]);
