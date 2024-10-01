@@ -15,6 +15,8 @@ import {
   Switch,
   ListItemIcon
 } from '@mui/material';
+import { useUser } from '../../utils/userProvider';
+import { fetchConversation } from '../../utils/fetchRequests';
 
 const noteStyles = {
   nextNote: {
@@ -36,29 +38,25 @@ const noteStyles = {
   }
 }
 
-// Function to fetch agenda items
-const fetchAgendaItems = async (meetingId) => {
-  const response = await fetch(`/api/meetings/${meetingId}/agenda`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch agenda items');
-  }
-  return [{ id: 1, title: 'hello there 1' }, { id: 2, title: 'by there 2' }, { id: 3, title: 'you are finished' }]
-
-  return response.json();
-};
-
 export default function MeetingNotes() {
-  const { id } = useParams();
-  const [hideDoneFlag, setHideDoneFlag] = useState<boolean>(false)
+  const { id: meetingId } = useParams();
+  const { userId } = useUser();
+  const [hideDoneFlag, setHideDoneFlag] = useState<boolean>(true)
   const [checkedNotes, setCheckedNotes] = useState<number[]>([])
   const [nextNoteId, setNextNoteId] = useState<number | undefined>(undefined)
 
 
   // Fetch agenda items
-  const { data: notes, isLoading, isError } = useQuery({
-    queryKey: ['agendaItems', id],
-    queryFn: () => fetchAgendaItems(id),
+  const { data: _notes, isLoading, isError } = useQuery({
+    queryKey: ['agendaItems', meetingId, userId],
+    queryFn: () => fetchConversation({ meetingId: parseInt(meetingId ?? '0'), userId }),
+    enabled: !!userId && !!meetingId,
   });
+
+  const notes = useMemo(() => _notes?.meeting_agenda.map(
+    (item,index) => ({ id: index+1, title: item.agenda_item, done: item.completed }))
+    , [_notes]
+  )
 
   // handle user interaction
   const checkNote = (id?: number) => {
@@ -91,8 +89,10 @@ export default function MeetingNotes() {
 
 
   const visibleNotes = useMemo(() => {
+
+    if (!notes) return []
     if (hideDoneFlag) {
-      return notes?.filter((note) => !checkedNotes.includes(note.id))
+      return notes.filter((note) => !checkedNotes.includes(note.id))
     }
     return notes
   }, [notes, checkedNotes, hideDoneFlag])
@@ -109,22 +109,15 @@ export default function MeetingNotes() {
     <Box>
       <Typography
         variant="h4"
+        gutterBottom
         sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Agenda for {id}
+        Agenda for {meetingId}
         <Switch
           onChange={() => setHideDoneFlag(!hideDoneFlag)}
           checked={!hideDoneFlag}
         ></Switch>
       </Typography>
-
-      <Paper elevation={3}
-        sx={{
-          p: 1,
-          borderRadius: 2,
-          wordBreak: 'break-word',
-          whiteSpace: 'pre-wrap',
-        }}
-      >
+      <Paper elevation={3}>
         <List >
           {visibleNotes?.map((note) => (
             <ListItem
@@ -150,7 +143,7 @@ export default function MeetingNotes() {
           ))}
         </List>
         {
-          (notes.length > 0 && visibleNotes.length === 0) &&
+          (notes.length > 0 && visibleNotes?.length === 0) &&
           <Typography>
             Done!
           </Typography>

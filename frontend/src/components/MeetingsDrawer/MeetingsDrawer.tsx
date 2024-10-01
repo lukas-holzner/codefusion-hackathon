@@ -106,7 +106,11 @@ export const MeetingsDrawer = ({
 						</ListItem>
 						{dayMeetings.map(meeting => (
 							<ListItem disablePadding key={meeting.id}>
-								<ListItemButton component={Link} to={`/meeting/${meeting.id}`} sx={{ paddingLeft: '32px' }}>
+								<ListItemButton 
+									component={Link} 
+									to={meeting.status === 'done' ? `/meeting/${meeting.id}/notes` : `/meeting/${meeting.id}/`} 
+									sx={{ paddingLeft: '32px' }}
+								>
 									<ListItemText primary={meeting.title} />
 									<ListItemIcon sx={{ minWidth: '32px' }}>
 										{statusIcon[meeting.status] ?? statusIcon.unknown}
