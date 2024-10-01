@@ -78,7 +78,7 @@ export const MeetingsDrawer = ({
 			<React.Fragment key={weekNumber}>
 				{index !== 0 && (
 					<>
-						<ListItem disablePadding component="h2" sx={{ justifyContent: 'flex-start', paddingLeft: '12px' }}>
+						<ListItem disablePadding component="h2" sx={{ justifyContent: 'flex-start', paddingLeft: '32px' }}>
 							KW {weekNumber}
 						</ListItem>
 						<Divider />
@@ -87,13 +87,13 @@ export const MeetingsDrawer = ({
 
 				{Object.entries(days).map(([day, dayMeetings]) => (
 					<React.Fragment key={day}>
-						<ListItem component="h4" sx={{ margin: '2',  }}>
+						<ListItem component="h4" sx={{ margin: '8px 0', paddingLeft: '32px' }}>
 							{day}
 						</ListItem>
 						{dayMeetings.map(meeting => (
 							<ListItem disablePadding key={meeting.id}>
-								<ListItemButton component={Link} to={`/meeting/${meeting.id}`}>
-									<ListItemIcon>
+								<ListItemButton component={Link} to={`/meeting/${meeting.id}`} sx={{paddingLeft: '32px'}}>
+									<ListItemIcon sx={{minWidth: '32px'}}>
 										<MeetingRoomIcon />
 									</ListItemIcon>
 									<ListItemText primary={meeting.title} />
