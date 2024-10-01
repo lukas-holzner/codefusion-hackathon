@@ -12,7 +12,7 @@ interface UserProviderProps {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [userId, setUserId] = useState(2);
+  const [userId, setUserId] = useState(1);
 
   return (
     <UserContext.Provider value={{ userId, setUserId }}>

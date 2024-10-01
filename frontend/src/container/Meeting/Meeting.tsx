@@ -12,16 +12,21 @@ import {
   ListItem, 
   Typography,
   Avatar,
-  Card
+  Card,
+  useMediaQuery,
+  IconButton
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import ViewAgendaOutlinedIcon from '@mui/icons-material/ViewAgendaOutlined';
+import { useTheme } from '@emotion/react';
 
 import './Meeting.css';
 import { useUser } from '../../utils/userProvider';
-import { AgendaDrawer } from '../../components/AgendaDrawer/AgendaDrawer';
+import { AgendaDrawer, AgendaDrawerWidth } from '../../components/AgendaDrawer/AgendaDrawer';
 import { useAgenda } from '../../utils/meetingAgenda';
+import { fetchConversation, fetchMeetingDetails } from '../../utils/fetchRequests';
 
 const deleteConversation = async ({ meetingId, userId }) => {
 	const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation`, {
@@ -32,14 +37,6 @@ const deleteConversation = async ({ meetingId, userId }) => {
 	});
 	if (!response.ok) {
 	  throw new Error('Failed to delete conversation');
-	}
-	return response.json();
-};
-
-const fetchConversation = async ({ meetingId, userId }) => {
-	const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation`);
-	if (!response.ok) {
-	  throw new Error('Failed to fetch conversation');
 	}
 	return response.json();
 };
@@ -58,20 +55,30 @@ const sendMessage = async ({ message, meetingId, userId }) => {
   return response.json();
 };
 
-export const Meeting = () => {
-	const { id: meetingId } = useParams();
+export const Meeting: React.FC = () => {
+	const { id: meetingId } = useParams<{ id: string }>();
 	const { userId } = useUser();
-	const { agendaItems, setAgendaItems } = useAgenda();
-	const navigate = useNavigate();
 
-	const [messages, setMessages] = useState([]);
+	const navigate = useNavigate();
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+	const [messages, setMessages] = useState<any[]>([]);
 	const [inputMessage, setInputMessage] = useState('');
-	const messagesEndRef = useRef(null);
+	const [isAgendaDrawerOpen, setIsAgendaDrawerOpen] = useState(false);
+	const [hasAgenda, setHasAgenda] = useState(false);
+	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const queryClient = useQueryClient();
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
+
+	const { data: meetingDetails } = useQuery({
+		queryKey: ['meeting', meetingId],
+		queryFn: () => fetchMeetingDetails({ meetingId }),
+		enabled: !!meetingId,
+	});
 
 	const { data: conversation, isLoading } = useQuery({
 		queryKey: ['conversation', meetingId, userId],
@@ -95,8 +102,14 @@ export const Meeting = () => {
 	useEffect(() => {
 		if (conversation) {
 			setMessages(conversation.chat_messages);
+			setHasAgenda(conversation.meeting_agenda.length > 0);
+			setIsAgendaDrawerOpen(!isMobile && conversation.meeting_agenda.length > 0);
+
+			if (conversation.finished) {
+				navigate(`/meeting/${meetingId}/agenda`);
+			}
 		}
-	}, [conversation]);
+	}, [conversation, isMobile, meetingId, navigate]);
 
 	const mutation = useMutation({
 		mutationFn: sendMessage,
@@ -130,12 +143,31 @@ export const Meeting = () => {
 	};
 
 	return (
-		<>
-			<Box className="MeetingContainer">
-				<Typography variant="h4" gutterBottom>
-					Meeting: {meetingId}
-				</Typography>
-				<div className="ChatContainer">
+		<Box sx={{ display: 'flex' }}>
+			<Box
+				component="main"
+				sx={{
+					flexGrow: 1,
+					p: 3,
+					width: { sm: `calc(100% - ${isAgendaDrawerOpen && !isMobile ? AgendaDrawerWidth : 0}px)` },
+					transition: theme.transitions.create(['margin', 'width'], {
+						easing: theme.transitions.easing.sharp,
+						duration: theme.transitions.duration.leavingScreen,
+					}),
+				}}
+			>
+				<Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }} className="MeetingHeader">
+					<Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
+						Meeting: {meetingDetails ? meetingDetails.title : '. . .'}
+					</Typography>
+					{isMobile && hasAgenda && (
+						<IconButton onClick={() => setIsAgendaDrawerOpen(true)}>
+							<ViewAgendaOutlinedIcon />
+						</IconButton>
+					)}
+				</Box>
+				
+				<Box className="ChatContainer">
 					<List>
 						{messages.map((message, index) => (
 							<ListItem
@@ -186,11 +218,11 @@ export const Meeting = () => {
 					>
 						{deleteMutation.isPending ? 'Clearing...' : 'Clear Conversation'}
 					</Button>
-				</div>
-				<Box sx={{ display: 'flex', mb: 2 }}>
+				</Box>
+				
+				<Box sx={{ display: 'flex', mt: 2 }}>
 					<TextField
 						fullWidth
-						autoFocus
 						variant="outlined"
 						placeholder="Type your message..."
 						value={inputMessage}
@@ -213,6 +245,14 @@ export const Meeting = () => {
 					</Button>
 				</Box>
 			</Box>
-		</>
+			
+			{hasAgenda && (
+				<AgendaDrawer
+					agendaItems={conversation?.meeting_agenda ?? []}
+					isOpen={isAgendaDrawerOpen}
+					onClose={() => setIsAgendaDrawerOpen(false)}
+				/>
+			)}
+		</Box>
 	);
 };

@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import {
-	Box,
-	CssBaseline,
-	Toolbar,
-	useMediaQuery,
-} from '@mui/material'
+import { Box, CssBaseline, Toolbar, useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { AppBar } from '../../components/AppBar/AppBar'
 import { MenuDrawer } from '../../components/MeetingsDrawer/MeetingsDrawer'

@@ -1,5 +1,5 @@
-import React,{ useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import React,{ useEffect, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import {
 	Box,
 	CssBaseline,
@@ -16,6 +16,11 @@ export const Home = () => {
 	const [mobileOpen, setMobileOpen] = useState(false)
 	const theme = useTheme()
 	const isLargeScreen = useMediaQuery(theme.breakpoints.up('sm'))
+	let location = useLocation();
+
+	useEffect(() => {
+		setMobileOpen(false)
+	}, [location])
 
 	const handleDrawerToggle = () => {
 		setMobileOpen(!mobileOpen)
@@ -47,7 +52,7 @@ export const Home = () => {
 					component="main"
 					sx={{
 						flexGrow: 1,
-						p: 3,
+						p: {sm: 3},
 						width: {
 							sm: `calc(100% - ${
 								mobileOpen ? '0px' : drawerWidth
