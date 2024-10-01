@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
 	Drawer as MuiDrawer,
@@ -81,11 +81,12 @@ export const MeetingsDrawer = ({
 	drawerWidth,
 }) => {
 	const activeUser = useUser()
+	const { id } = useParams<{ id: string }>();
 	const { data: meetings, isLoading, isError } = useQuery({
 		queryKey: ['meetings', activeUser.userId],
 		queryFn: () => fetchMeetings(activeUser.userId),
 	})
-
+	const meetingId = id?.toString()
 	const groupedMeetings = meetings ? groupMeetingsByWeek(meetings) : {}
 
 	const renderMeetings = () => {
@@ -106,10 +107,14 @@ export const MeetingsDrawer = ({
 							{day}
 						</ListItem>
 						{dayMeetings.map(meeting => (
-							<ListItem disablePadding key={meeting.id}>
-								<ListItemButton 
-									component={Link} 
-									to={meeting.status === 'done' ? `/meeting/${meeting.id}/notes` : `/meeting/${meeting.id}/`} 
+							<ListItem
+								disablePadding
+								key={meeting.id}
+							>
+								<ListItemButton
+								selected={meeting.id.toString() === meetingId}
+									component={Link}
+									to={meeting.status === 'done' ? `/meeting/${meeting.id}/notes` : `/meeting/${meeting.id}/`}
 									sx={{ paddingLeft: '32px' }}
 								>
 									<ListItemText primary={meeting.title} />
