@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
 from . import models
-from .routers import meetings, users, test
+from .routers import meetings, users, tts
 import os
 
 models.Base.metadata.create_all(bind=engine)
@@ -32,9 +32,9 @@ app.add_middleware(
 )
 
 # Include the router with the /api prefix
-app.include_router(meetings.router, tags=["meetings"])
-app.include_router(users.router, tags=["users"])
-app.include_router(test.router, tags=["test"])
+app.include_router(meetings.router, tags=["Meetings"])
+app.include_router(users.router, tags=["Users"])
+app.include_router(tts.router, tags=["TTS"])
 
 @app.get("/", include_in_schema=False)
 async def serve_index():

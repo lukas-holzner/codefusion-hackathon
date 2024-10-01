@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { 
@@ -14,21 +14,23 @@ import {
 } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { DropComponent } from '../../components/DropComponent/DropComponent';
+import { useUser } from '../../utils/userProvider';
+import { fetchConversation, fetchMeetingDetails } from '../../utils/fetchRequests';
 
 // Function to fetch agenda items
-const fetchAgendaItems = async (meetingId) => {
-  const response = await fetch(`/api/meetings/${meetingId}/agenda`);
-  return [{id: 1, title: 'hello there 1'}, {id: 2, title: 'by there 2'}, {id: 3, title: 'you are finished'}]
-  if (!response.ok) {
-    throw new Error('Failed to fetch agenda items');
-  }
-  return response.json();
-};
+// const fetchAgendaItems = async (meetingId, userId) => {
+//   const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation`);
+
+//   if (!response.ok) {
+//     throw new Error('Failed to fetch agenda items');
+//   }
+//   return response.json();
+// };
 
 // Function to save the reordered agenda items
-const saveAgendaOrder = async ({ meetingId, items }) => {
-  const response = await fetch(`/api/meetings/${meetingId}/agenda`, {
-    method: 'PUT',
+const saveAgendaOrder = async ({ meetingId, userId, items }) => {
+  const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation/update_agenda`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -49,21 +51,35 @@ const reorder = (list, startIndex, endIndex) => {
 
 export default function AgendaList() {
   const { id } = useParams();
+  const { userId } = useUser();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch agenda items
+  const { data: meetingDetails } = useQuery({
+    queryKey: ['meeting', id],
+    queryFn: () => fetchMeetingDetails({meetingId: parseInt(`${id ?? '0'}`, 10 )}),
+    enabled: !!id,
+  });
+
   const { data: agendaItems, isLoading, isError } = useQuery({
-    queryKey: ['agendaItems', id],
-    queryFn: () => fetchAgendaItems(id),
+    queryKey: ['agendaItems', id, userId],
+    queryFn: () => fetchConversation({meetingId: parseInt(`${id ?? '0'}`, 10 ), userId}),
+    enabled: !!id && !!userId,
   });
 
   // Mutation for saving the reordered list
   const mutation = useMutation({
     mutationFn: saveAgendaOrder,
     onSuccess: () => {
-      queryClient.invalidateQueries(['agendaItems', id]);
+      queryClient.invalidateQueries({ queryKey: ['agendaItems', id, userId] });
     },
   });
+
+  useEffect(() => {
+    if(agendaItems.meeting_agenda.length === 0) {
+      navigate(`/meeting/${id}`);
+    }
+  }, [agendaItems]);
 
   // Handle drag end
   const onDragEnd = (result) => {
@@ -72,17 +88,17 @@ export default function AgendaList() {
     }
 
     const items = reorder(
-      agendaItems,
+      agendaItems.meeting_agenda,
       result.source.index,
       result.destination.index
     );
 
-    queryClient.setQueryData(['agendaItems', id], items);
+    queryClient.setQueryData(['agendaItems', id, userId], {...agendaItems, meeting_agenda: items});
   };
 
   // Handle save button click
   const handleSave = () => {
-    mutation.mutate({ meetingId: id, items: agendaItems });
+    mutation.mutate({ meetingId: id, userId, items: agendaItems.meeting_agenda });
   };
 
   if (isLoading) {
@@ -96,15 +112,15 @@ export default function AgendaList() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Meeting Agenda for {id}
+        Meeting Agenda for {meetingDetails ? meetingDetails.title : '. . .'}
       </Typography>
       <DragDropContext onDragEnd={onDragEnd}>
         <DropComponent droppableId="agenda">
           {(provided) => (
             <Paper elevation={3}>
               <List {...provided.droppableProps} ref={provided.innerRef}>
-                {agendaItems.map((item, index) => (
-                  <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={index}>
+                {agendaItems.meeting_agenda && agendaItems.meeting_agenda.map((item, index) => (
+                  <Draggable key={`${index}-${item.agenda_item}`} draggableId={`${index}-${item.agenda_item}`} index={index}>
                     {(provided, snapshot) => (
                       <ListItem
                         ref={provided.innerRef}
@@ -129,7 +145,7 @@ export default function AgendaList() {
                         >
                           <DragIndicatorIcon />
                         </Box>
-                        <ListItemText primary={item.title} />
+                        <ListItemText primary={item.agenda_item} />
                       </ListItem>
                     )}
                   </Draggable>

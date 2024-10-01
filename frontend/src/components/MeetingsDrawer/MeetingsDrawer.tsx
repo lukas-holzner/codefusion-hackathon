@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -17,7 +19,7 @@ import {
 import HomeIcon from '@mui/icons-material/Home'
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom'
 
-import './Drawer.css'
+import './MeetingsDrawer.css'
 
 const fetchMeetings = async () => {
 	const response = await fetch('https://codefusion.lholz.de/meetings/?skip=0&limit=100')
@@ -57,7 +59,7 @@ const getDayName = (date) => {
 	return date.toLocaleDateString('en-US', { weekday: 'long' })
 }
 
-export const Drawer = ({
+export const MeetingsDrawer = ({
 	isLargeScreen,
 	mobileOpen,
 	handleDrawerToggle,

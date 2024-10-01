@@ -1,8 +1,13 @@
 import os
 from dotenv import load_dotenv
+from fastapi import UploadFile, HTTPException
+from fastapi.responses import FileResponse
 from openai import OpenAI
 from typing import List, Dict
 import json
+import io
+import tempfile
+from starlette.background import BackgroundTask
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,6 +45,7 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
     """
     try:
         # Debug: Print input messages
+        print("Debug: System message:", system_message)
         print("Debug: Input messages:", messages)
 
         # Call the OpenAI API with the system message and messages list
@@ -70,7 +76,7 @@ def process_user_message(system_message: str, messages: List[str]) -> Dict[str, 
             agenda = json.loads(f"[{agenda_str}]")
             
             # Remove the agenda from the assistant's response
-            assistant_response = assistant_response[:agenda_start-len("<agenda>")] + assistant_response[agenda_end+len("</agenda>"):]
+            #assistant_response = assistant_response[:agenda_start-len("<agenda>")] + assistant_response[agenda_end+len("</agenda>"):]
         
         # Remove #EOC# marker from the response
         assistant_response = assistant_response.replace("#EOC#", "").strip()
@@ -133,3 +139,58 @@ if __name__ == "__main__":
             break
 
     print("Conversation ended.")
+
+async def convert_audio_to_text(audio_file: UploadFile):
+    """
+    Convert an uploaded audio file to text using OpenAI's Whisper model.
+    """
+    try:
+        # Read the file content
+        file_content = await audio_file.read()
+        
+        # Create a file-like object from the content
+        audio_file_obj = io.BytesIO(file_content)
+        audio_file_obj.name = audio_file.filename  # Set the filename
+
+        # Call the OpenAI API to transcribe the audio
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file_obj,
+            response_format="text"
+        )
+
+        return transcript
+    except Exception as e:
+        print(f"Error in audio transcription: {str(e)}")
+        return None
+
+async def convert_text_to_audio(text: str, voice: str = "alloy"):
+    """
+    Convert text to audio using OpenAI's text-to-speech API and return a FastAPI FileResponse.
+    
+    :param text: The text to convert to speech
+    :param voice: The voice to use (default is "alloy")
+    :return: A FastAPI FileResponse containing the audio file
+    """
+    try:
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice=voice,
+            input=text
+        )
+        
+        # Create a temporary file to store the audio content
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+            temp_file.write(response.content)
+            temp_file_path = temp_file.name
+
+        # Return a FileResponse
+        return FileResponse(
+            path=temp_file_path,
+            media_type="audio/mpeg",
+            filename="speech.mp3",
+            background=BackgroundTask(lambda: os.unlink(temp_file_path))
+        )
+    except Exception as e:
+        print(f"Error in text-to-speech conversion: {str(e)}")
+        raise HTTPException(status_code=500, detail="Text-to-speech conversion failed")

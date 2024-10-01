@@ -1,20 +1,25 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
+import os
 
 from app.routers.users import get_user
-from app.ai_manager import generate_initial_prompt, process_user_message
+from app.ai_manager import generate_initial_prompt, process_user_message, convert_audio_to_text
 from .. import schemas
 from ..database import get_db
 from ..models import Conversation, Meeting, ChatMessage, MeetingAgenda
 from ..util.openai import init_conversation, generate_response
 
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+AUDIO_MIME_TYPES = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg"]
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB in bytes
 
 # Meeting CRUD operations
 def get_meeting(db: Session, meeting_id: int):
@@ -78,6 +83,10 @@ def add_message(db: Session, meeting_id: int, user_id: int, message: schemas.Cha
 
     # Create MeetingAgenda objects only if agenda exists and is not empty
     if "agenda" in assistant_response and assistant_response["agenda"]:
+        # Delete existing agenda items
+        db.query(MeetingAgenda).filter(MeetingAgenda.conversation_id == db_conversation.id).delete()
+        
+        # Add new agenda items
         for agenda_item in assistant_response["agenda"]:
             db_conversation.meeting_agenda.append(MeetingAgenda(
                 agenda_item=agenda_item,
@@ -126,6 +135,11 @@ def read_meetings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     return meetings
 
 @router.get("/meetings/{meeting_id}", response_model=schemas.MeetingSchema)
+def read_meeting_route(meeting_id: int, db: Session = Depends(get_db)):
+    db_meeting = get_meeting(db, meeting_id=meeting_id)
+    if db_meeting is None:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    return db_meeting
 
 @router.put("/meetings/{meeting_id}", response_model=schemas.Meeting)
 def update_meeting_route(meeting_id: int, meeting: schemas.MeetingCreate, db: Session = Depends(get_db)):
@@ -171,11 +185,39 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
         db_conversation = create_new_conversation(db, meeting_id=meeting_id, user_id=user_id)
     else:
         db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
+
+    db_conversation.chat_messages = extract_and_format_agenda(db_conversation.chat_messages)
     return db_conversation
 
 @router.post("/meetings/{meeting_id}/{user_id}/conversation/message", response_model=schemas.Conversation)
 def router_add_message(meeting_id: int, user_id: int, message: str, db: Session = Depends(get_db)):
-    return add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
+    ret = add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
+
+    ret.chat_messages = extract_and_format_agenda(ret.chat_messages)
+    return ret
+
+@router.post("/meetings/{meeting_id}/{user_id}/conversation/message_audio", response_model=schemas.Conversation)
+async def router_add_message_audio(
+    meeting_id: int, 
+    user_id: int, 
+    audio_file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
+    # Check file type
+    if audio_file.content_type not in AUDIO_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only audio files are allowed.")
+    
+    # Check file size
+    file_size = await audio_file.read()
+    await audio_file.seek(0)  # Reset file pointer to the beginning
+    if len(file_size) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds the 5 MB limit.")
+
+    audio_text = await convert_audio_to_text(audio_file)
+    if audio_text is None:
+        raise HTTPException(status_code=500, detail="Failed to transcribe audio file.")
+    
+    return router_add_message(meeting_id, user_id, audio_text, db)
 
 @router.delete("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
 def delete_conversation(meeting_id: int, user_id: int, db: Session = Depends(get_db)):
@@ -184,7 +226,41 @@ def delete_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="Conversation not found")
     db.delete(db_conversation)
     db.commit()
-    return db_conversation  
+    return db_conversation
 
+@router.post("/meetings/{meeting_id}/{user_id}/conversation/update_agenda", response_model=schemas.Conversation)
+def update_agenda(
+    meeting_id: int, 
+    user_id: int, 
+    agenda: List[schemas.MeetingAgenda], 
+    db: Session = Depends(get_db)
+):
+    db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
+    if db_conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Clear existing agenda items
+    db_conversation.meeting_agenda.clear()
+    
+    # Create new MeetingAgenda objects and add them to the conversation
+    for item in agenda:
+        new_agenda_item = MeetingAgenda(
+            agenda_item=item.agenda_item,
+            completed=item.completed,
+            conversation_id=db_conversation.id
+        )
+        db_conversation.meeting_agenda.append(new_agenda_item)
+    
+    db.commit()
+    db.refresh(db_conversation)
+    return db_conversation
 
-
+def extract_and_format_agenda(messages):
+    for message in messages:
+        agenda_match = re.search(r'<agenda>(.*?)</agenda>', message.message, re.DOTALL)
+        if agenda_match:
+            agenda_content = agenda_match.group(1)
+            agenda_items = [item.strip() for item in agenda_content.split(',')]
+            formatted_agenda = '\n'.join(f"{i+1}. {item}" for i, item in enumerate(agenda_items))
+            message.message = re.sub(r'<agenda>.*?</agenda>', formatted_agenda, message.message, flags=re.DOTALL)
+    return messages
