@@ -17,12 +17,23 @@ import {
 	Typography,
 } from '@mui/material'
 import HomeIcon from '@mui/icons-material/Home'
-import MeetingRoomIcon from '@mui/icons-material/MeetingRoom'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline'
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import { useUser } from '../../utils/userProvider';
 
 import './MeetingsDrawer.css'
 
-const fetchMeetings = async () => {
-	const response = await fetch('https://codefusion.lholz.de/meetings/?skip=0&limit=100')
+const statusIcon = {
+	'done': <CheckCircleOutlineIcon />,
+	'in_progress': <PauseCircleOutlineIcon />,
+	'todo': <PlayCircleOutlineIcon />,
+	"unknown": <HelpOutlineIcon />,
+}
+
+const fetchMeetings = async (userId) => {
+	const response = await fetch(`https://codefusion.lholz.de/meetings/by_user/${userId}?skip=0&limit=100`)
 	if (!response.ok) {
 		throw new Error('Failed to fetch meetings')
 	}
@@ -31,7 +42,8 @@ const fetchMeetings = async () => {
 
 const groupMeetingsByWeek = (meetings) => {
 	const grouped = {}
-	meetings.forEach(meeting => {
+	meetings.forEach((item) => {
+		const meeting = { ...item.meeting, status: item.conversation_status }
 		const date = new Date(meeting.date)
 		const weekNumber = getWeekNumber(date)
 		const dayName = getDayName(date)
@@ -43,6 +55,7 @@ const groupMeetingsByWeek = (meetings) => {
 			grouped[weekNumber][dayName] = []
 		}
 		grouped[weekNumber][dayName].push(meeting)
+
 	})
 	return grouped
 }
@@ -66,9 +79,10 @@ export const MeetingsDrawer = ({
 	handleDrawerToggle,
 	drawerWidth,
 }) => {
+	const activeUser = useUser()
 	const { data: meetings, isLoading, isError } = useQuery({
-		queryKey: ['meetings'],
-		queryFn: fetchMeetings,
+		queryKey: ['meetings', activeUser.userId],
+		queryFn: () => fetchMeetings(activeUser.userId),
 	})
 
 	const groupedMeetings = meetings ? groupMeetingsByWeek(meetings) : {}
@@ -92,11 +106,12 @@ export const MeetingsDrawer = ({
 						</ListItem>
 						{dayMeetings.map(meeting => (
 							<ListItem disablePadding key={meeting.id}>
-								<ListItemButton component={Link} to={`/meeting/${meeting.id}`} sx={{paddingLeft: '32px'}}>
-									<ListItemIcon sx={{minWidth: '32px'}}>
-										<MeetingRoomIcon />
-									</ListItemIcon>
+								<ListItemButton component={Link} to={`/meeting/${meeting.id}`} sx={{ paddingLeft: '32px' }}>
 									<ListItemText primary={meeting.title} />
+									<ListItemIcon sx={{ minWidth: '32px' }}>
+										{statusIcon[meeting.status] ?? statusIcon.unknown}
+									</ListItemIcon>
+
 								</ListItemButton>
 							</ListItem>
 						))}

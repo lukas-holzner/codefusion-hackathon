@@ -113,7 +113,7 @@ export default function MeetingNotes() {
         Agenda for {id}
         <Switch
           onChange={() => setHideDoneFlag(!hideDoneFlag)}
-          defaultChecked={!hideDoneFlag}
+          checked={!hideDoneFlag}
         ></Switch>
       </Typography>
 
