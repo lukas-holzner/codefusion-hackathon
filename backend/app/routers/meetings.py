@@ -134,7 +134,7 @@ def read_meetings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     meetings = get_meetings(db, skip=skip, limit=limit)
     return meetings
 
-@router.get("/meetings/{user_id}", response_model=List[schemas.MeetingStatusUser])
+@router.get("/meetings/by_user/{user_id}", response_model=List[schemas.MeetingStatusUser])
 def read_meetings_by_user(user_id: int, db: Session = Depends(get_db)):
     status_meetings = []
     meetings = get_meetings(db)
