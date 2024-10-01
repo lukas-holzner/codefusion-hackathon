@@ -182,19 +182,14 @@ def create_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
     else:
         db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
 
-    # Process messages to remove <agenda> tags
-    for message in db_conversation.chat_messages:
-        message.message = re.sub(r'<agenda>.*?</agenda>', '', message.message, flags=re.DOTALL)
-        
+    db_conversation.chat_messages = extract_and_format_agenda(db_conversation.chat_messages)
     return db_conversation
 
 @router.post("/meetings/{meeting_id}/{user_id}/conversation/message", response_model=schemas.Conversation)
 def router_add_message(meeting_id: int, user_id: int, message: str, db: Session = Depends(get_db)):
     ret = add_message(db, meeting_id=meeting_id, user_id=user_id, message=ChatMessage(message=message, author="user", timestamp=datetime.now()))
 
-    for message in ret.chat_messages:
-        message.message = re.sub(r'<agenda>.*?</agenda>', '', message.message, flags=re.DOTALL)
-  
+    ret.chat_messages = extract_and_format_agenda(ret.chat_messages)
     return ret
 
 @router.delete("/meetings/{meeting_id}/{user_id}/conversation", response_model=schemas.Conversation)
@@ -232,3 +227,13 @@ def update_agenda(
     db.commit()
     db.refresh(db_conversation)
     return db_conversation
+
+def extract_and_format_agenda(messages):
+    for message in messages:
+        agenda_match = re.search(r'<agenda>(.*?)</agenda>', message.message, re.DOTALL)
+        if agenda_match:
+            agenda_content = agenda_match.group(1)
+            agenda_items = [item.strip() for item in agenda_content.split(',')]
+            formatted_agenda = '\n'.join(f"{i+1}. {item}" for i, item in enumerate(agenda_items))
+            message.message = re.sub(r'<agenda>.*?</agenda>', formatted_agenda, message.message, flags=re.DOTALL)
+    return messages
