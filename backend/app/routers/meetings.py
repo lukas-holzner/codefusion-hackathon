@@ -134,6 +134,22 @@ def read_meetings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     meetings = get_meetings(db, skip=skip, limit=limit)
     return meetings
 
+@router.get("/meetings/{user_id}", response_model=List[schemas.MeetingStatusUser])
+def read_meetings_by_user(user_id: int, db: Session = Depends(get_db)):
+    status_meetings = []
+    meetings = get_meetings(db)
+    for meeting in meetings:
+        conversation = get_conversation(db, meeting_id=meeting.id, user_id=user_id)
+        if conversation is None:
+            meeting_status = "todo"
+        else:
+            if conversation.finished:
+                meeting_status = "done"
+            else:
+                meeting_status = "in_progress"
+        status_meetings.append(schemas.MeetingStatusUser(conversation_status=meeting_status, meeting=meeting))
+    return status_meetings
+
 @router.get("/meetings/{meeting_id}", response_model=schemas.MeetingSchema)
 def read_meeting_route(meeting_id: int, db: Session = Depends(get_db)):
     db_meeting = get_meeting(db, meeting_id=meeting_id)
