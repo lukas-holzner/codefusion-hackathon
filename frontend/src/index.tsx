@@ -12,6 +12,7 @@ import { PrepNow } from './container/PrepNow/PrepNow'
 import AgendaList from './container/AgendaList/AgendaList'
 import MeetingRoot from './container/Meeting/MeetingRoot'
 import { UserProvider } from './utils/userProvider'
+import { AgendaProvider } from './utils/meetingAgenda'
 
 const queryClient = new QueryClient()
 
@@ -68,9 +69,11 @@ root.render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<ThemeProvider theme={theme}>
-        <UserProvider>
-				    <RouterProvider router={router} />
-        </UserProvider>
+				<UserProvider>
+					<AgendaProvider>
+							<RouterProvider router={router} />
+					</AgendaProvider>
+				</UserProvider>
 			</ThemeProvider>
 		</QueryClientProvider>
 	</React.StrictMode>

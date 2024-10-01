@@ -19,7 +19,7 @@ import {
 import HomeIcon from '@mui/icons-material/Home'
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom'
 
-import './Drawer.css'
+import './MeetingsDrawer.css'
 
 const fetchMeetings = async () => {
 	const response = await fetch('https://codefusion.lholz.de/meetings/?skip=0&limit=100')

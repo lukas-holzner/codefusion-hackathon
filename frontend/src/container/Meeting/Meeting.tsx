@@ -20,6 +20,8 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 import './Meeting.css';
 import { useUser } from '../../utils/userProvider';
+import { AgendaDrawer } from '../../components/AgendaDrawer/AgendaDrawer';
+import { useAgenda } from '../../utils/meetingAgenda';
 
 const deleteConversation = async ({ meetingId, userId }) => {
 	const response = await fetch(`https://codefusion.lholz.de/meetings/${meetingId}/${userId}/conversation`, {
@@ -59,6 +61,7 @@ const sendMessage = async ({ message, meetingId, userId }) => {
 export const Meeting = () => {
 	const { id: meetingId } = useParams();
 	const { userId } = useUser();
+	const { agendaItems, setAgendaItems } = useAgenda();
 	const navigate = useNavigate();
 
 	const [messages, setMessages] = useState([]);
@@ -99,6 +102,7 @@ export const Meeting = () => {
 		mutationFn: sendMessage,
 		onSuccess: (data) => {
 			setMessages(() => data.chat_messages);
+			setAgendaItems(data.agenda_items);
 
 			if (data.finished) {
 				navigate(`/meeting/${meetingId}/agenda`);
@@ -126,87 +130,89 @@ export const Meeting = () => {
 	};
 
 	return (
-		<Box className="MeetingContainer">
-			<Typography variant="h4" gutterBottom>
-				Meeting: {meetingId}
-			</Typography>
-			<div className="ChatContainer">
-				<List>
-					{messages.map((message, index) => (
-						<ListItem
-							key={index}
-							sx={{
-								display: 'flex',
-								justifyContent: message.author !== 'assistant' ? 'flex-end' : 'flex-start',
-								mb: 2,
-							}}
-							className="MessageItem"
-						>
-							<Box
+		<>
+			<Box className="MeetingContainer">
+				<Typography variant="h4" gutterBottom>
+					Meeting: {meetingId}
+				</Typography>
+				<div className="ChatContainer">
+					<List>
+						{messages.map((message, index) => (
+							<ListItem
+								key={index}
 								sx={{
 									display: 'flex',
-									flexDirection: message.author !== 'assistant' ? 'row-reverse' : 'row',
-									alignItems: 'center',
+									justifyContent: message.author !== 'assistant' ? 'flex-end' : 'flex-start',
+									mb: 2,
 								}}
+								className="MessageItem"
 							>
-								<Avatar sx={{ bgcolor: message.author !== 'assistant' ? 'primary.main' : 'secondary.main', mr: message.author !== 'assistant' ? 0 : 1, ml: message.author !== 'assistant' ? 1 : 0 }}>
-									{message.author !== 'assistant' ? <PersonIcon /> : <SmartToyIcon />}
-								</Avatar>
-								<Paper
-									elevation={3}
+								<Box
 									sx={{
-										p: 2,
-										bgcolor: message.author !== 'assistant' ? 'primary.light' : 'secondary.light',
-										maxWidth: '70%',
-										borderRadius: 4,
-										borderTopRightRadius: message.author !== 'assistant' ? 0 : 16,
-										borderTopLeftRadius: message.author !== 'assistant' ? 16 : 0,
-										wordBreak: 'break-word',
-										whiteSpace: 'pre-wrap',
+										display: 'flex',
+										flexDirection: message.author !== 'assistant' ? 'row-reverse' : 'row',
+										alignItems: 'center',
 									}}
 								>
-									<Typography variant="body1">{message.message}</Typography>
-								</Paper>
-							</Box>
-						</ListItem>
-					))}
-					<div ref={messagesEndRef} />
-				</List>
-				<Button
-					variant="outlined"
-					color="secondary"
-					onClick={handleDeleteConversation}
-					disabled={deleteMutation.isPending}
-					sx={{ ml: 1 }}
-				>
-					{deleteMutation.isPending ? 'Clearing...' : 'Clear Conversation'}
-				</Button>
-			</div>
-			<Box sx={{ display: 'flex', mb: 2 }}>
-				<TextField
-					fullWidth
-					autoFocus
-					variant="outlined"
-					placeholder="Type your message..."
-					value={inputMessage}
-					onChange={(e) => setInputMessage(e.target.value)}
-					onKeyPress={(e) => {
-						if (e.key === 'Enter') {
-							handleSendMessage();
-						}
-					}}
-				/>
-				<Button
-					variant="contained"
-					color="primary"
-					endIcon={<SendIcon />}
-					onClick={handleSendMessage}
-					disabled={mutation.isPending}
-					sx={{ ml: 1 }}
-				>
-					{mutation.isPending ? 'Sending...' : 'Send'}
-				</Button>
+									<Avatar sx={{ bgcolor: message.author !== 'assistant' ? 'primary.main' : 'secondary.main', mr: message.author !== 'assistant' ? 0 : 1, ml: message.author !== 'assistant' ? 1 : 0 }}>
+										{message.author !== 'assistant' ? <PersonIcon /> : <SmartToyIcon />}
+									</Avatar>
+									<Paper
+										elevation={3}
+										sx={{
+											p: 2,
+											bgcolor: message.author !== 'assistant' ? 'primary.light' : 'secondary.light',
+											maxWidth: '70%',
+											borderRadius: 4,
+											borderTopRightRadius: message.author !== 'assistant' ? 0 : 16,
+											borderTopLeftRadius: message.author !== 'assistant' ? 16 : 0,
+											wordBreak: 'break-word',
+											whiteSpace: 'pre-wrap',
+										}}
+									>
+										<Typography variant="body1">{message.message}</Typography>
+									</Paper>
+								</Box>
+							</ListItem>
+						))}
+						<div ref={messagesEndRef} />
+					</List>
+					<Button
+						variant="outlined"
+						color="secondary"
+						onClick={handleDeleteConversation}
+						disabled={deleteMutation.isPending}
+						sx={{ ml: 1 }}
+					>
+						{deleteMutation.isPending ? 'Clearing...' : 'Clear Conversation'}
+					</Button>
+				</div>
+				<Box sx={{ display: 'flex', mb: 2 }}>
+					<TextField
+						fullWidth
+						autoFocus
+						variant="outlined"
+						placeholder="Type your message..."
+						value={inputMessage}
+						onChange={(e) => setInputMessage(e.target.value)}
+						onKeyPress={(e) => {
+							if (e.key === 'Enter') {
+								handleSendMessage();
+							}
+						}}
+					/>
+					<Button
+						variant="contained"
+						color="primary"
+						endIcon={<SendIcon />}
+						onClick={handleSendMessage}
+						disabled={mutation.isPending}
+						sx={{ ml: 1 }}
+					>
+						{mutation.isPending ? 'Sending...' : 'Send'}
+					</Button>
+				</Box>
 			</Box>
-		</Box>
+		</>
 	);
 };
