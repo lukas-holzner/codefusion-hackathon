@@ -76,7 +76,7 @@ export default function AgendaList() {
   });
 
   useEffect(() => {
-    if(agendaItems.meeting_agenda.length === 0) {
+    if(agendaItems && agendaItems.meeting_agenda.length === 0) {
       navigate(`/meeting/${id}`);
     }
   }, [agendaItems]);
@@ -119,7 +119,7 @@ export default function AgendaList() {
           {(provided) => (
             <Paper elevation={3}>
               <List {...provided.droppableProps} ref={provided.innerRef}>
-                {agendaItems.meeting_agenda && agendaItems.meeting_agenda.map((item, index) => (
+                {agendaItems && agendaItems.meeting_agenda.map((item, index) => (
                   <Draggable key={`${index}-${item.agenda_item}`} draggableId={`${index}-${item.agenda_item}`} index={index}>
                     {(provided, snapshot) => (
                       <ListItem

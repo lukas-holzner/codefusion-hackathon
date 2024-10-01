@@ -114,8 +114,7 @@ export const Meeting: React.FC = () => {
 	const mutation = useMutation({
 		mutationFn: sendMessage,
 		onSuccess: (data) => {
-			setMessages(() => data.chat_messages);
-			setAgendaItems(data.agenda_items);
+			queryClient.invalidateQueries(['conversation', meetingId, userId]);
 
 			if (data.finished) {
 				navigate(`/meeting/${meetingId}/agenda`);
