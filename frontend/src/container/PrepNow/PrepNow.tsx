@@ -42,10 +42,14 @@ const createMeeting = async (meetingData: MeetingFormData): Promise<any> => {
 };
 
 export const PrepNow: React.FC = () => {
+  const nowIsh = new Date()
+  nowIsh.setMinutes(0)
+  nowIsh.setHours(nowIsh.getHours() + 1 )
+
   const [formData, setFormData] = useState<MeetingFormData>({
     title: "",
     description: "",
-    date: null,
+    date: nowIsh,
     meeting_type: "",
   });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({

@@ -40,8 +40,9 @@ const fetchMeetings = async (userId) => {
 	return response.json()
 }
 
-const groupMeetingsByWeek = (meetings) => {
+const groupMeetingsByWeek = (_meetings) => {
 	const grouped = {}
+	const meetings = _meetings.sort((a, b) => a.date - b.date)
 	meetings.forEach((item) => {
 		const meeting = { ...item.meeting, status: item.conversation_status }
 		const date = new Date(meeting.date)
