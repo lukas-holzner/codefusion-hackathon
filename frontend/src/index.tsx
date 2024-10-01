@@ -12,6 +12,7 @@ import { PrepNow } from './container/PrepNow/PrepNow'
 import AgendaList from './container/AgendaList/AgendaList'
 import MeetingRoot from './container/Meeting/MeetingRoot'
 import { UserProvider } from './utils/userProvider'
+import MeetingNotes from './container/MeetingNotes/MeetingNotes'
 import { AgendaProvider } from './utils/meetingAgenda'
 
 const queryClient = new QueryClient()
@@ -32,6 +33,10 @@ const router = createHashRouter([
           {
             path: '/meeting/:id/agenda',
             element: <AgendaList />,
+          },
+          {
+            path: '/meeting/:id/notes',
+            element: <MeetingNotes />,
           },
         ],
 			},
