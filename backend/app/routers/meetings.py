@@ -199,7 +199,31 @@ def delete_conversation(meeting_id: int, user_id: int, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="Conversation not found")
     db.delete(db_conversation)
     db.commit()
-    return db_conversation  
+    return db_conversation
 
-
-
+@router.post("/meetings/{meeting_id}/{user_id}/conversation/update_agenda", response_model=schemas.Conversation)
+def update_agenda(
+    meeting_id: int, 
+    user_id: int, 
+    agenda: List[schemas.MeetingAgenda], 
+    db: Session = Depends(get_db)
+):
+    db_conversation = get_conversation(db, meeting_id=meeting_id, user_id=user_id)
+    if db_conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Clear existing agenda items
+    db_conversation.meeting_agenda.clear()
+    
+    # Create new MeetingAgenda objects and add them to the conversation
+    for item in agenda:
+        new_agenda_item = MeetingAgenda(
+            agenda_item=item.agenda_item,
+            completed=item.completed,
+            conversation_id=db_conversation.id
+        )
+        db_conversation.meeting_agenda.append(new_agenda_item)
+    
+    db.commit()
+    db.refresh(db_conversation)
+    return db_conversation
