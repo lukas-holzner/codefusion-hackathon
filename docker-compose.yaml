@@ -11,6 +11,7 @@ services:
     environment:
       - DATABASE_URL=sqlite:///./data/database.db
       - URL=http://localhost:8000
+      - OPENAI_API_KEY=key-goes-here
     restart: unless-stopped
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
