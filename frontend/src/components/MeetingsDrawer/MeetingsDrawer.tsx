@@ -35,7 +35,7 @@ const groupMeetingsByWeek = (meetings) => {
 		const date = new Date(meeting.date)
 		const weekNumber = getWeekNumber(date)
 		const dayName = getDayName(date)
-		
+
 		if (!grouped[weekNumber]) {
 			grouped[weekNumber] = {}
 		}
@@ -51,11 +51,12 @@ const getWeekNumber = (date) => {
 	const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
 	const dayNum = d.getUTCDay() || 7
 	d.setUTCDate(d.getUTCDate() + 4 - dayNum)
-	const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1))
-	return Math.ceil((((d - yearStart) / 86400000) + 1)/7)
+	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+	return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
 }
 
 const getDayName = (date) => {
+	// TODO add a marker for 
 	return date.toLocaleDateString('en-US', { weekday: 'long' })
 }
 
@@ -73,17 +74,22 @@ export const MeetingsDrawer = ({
 	const groupedMeetings = meetings ? groupMeetingsByWeek(meetings) : {}
 
 	const renderMeetings = () => {
-		return Object.entries(groupedMeetings).map(([weekNumber, days]) => (
+		return Object.entries(groupedMeetings).map(([weekNumber, days], index) => (
 			<React.Fragment key={weekNumber}>
-				<ListItem disablePadding component="h2" sx={{justifyContent: 'flex-start', paddingLeft: '12px'}}>
-					KW {weekNumber}
-				</ListItem>
-				{Object.entries(days).map(([day, dayMeetings]) => (
-					<React.Fragment key={day}>
-						<ListItem component="h4" alignItems="center" sx={{justifyContent: 'center', margin: '0px'}}>
-							{day}
+				{index !== 0 && (
+					<>
+						<ListItem disablePadding component="h2" sx={{ justifyContent: 'flex-start', paddingLeft: '12px' }}>
+							KW {weekNumber}
 						</ListItem>
 						<Divider />
+					</>
+				)}
+
+				{Object.entries(days).map(([day, dayMeetings]) => (
+					<React.Fragment key={day}>
+						<ListItem component="h4" sx={{ margin: '2',  }}>
+							{day}
+						</ListItem>
 						{dayMeetings.map(meeting => (
 							<ListItem disablePadding key={meeting.id}>
 								<ListItemButton component={Link} to={`/meeting/${meeting.id}`}>

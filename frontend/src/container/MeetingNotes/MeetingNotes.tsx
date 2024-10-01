@@ -12,7 +12,8 @@ import {
   Paper,
   Box,
   CircularProgress,
-  Switch
+  Switch,
+  ListItemIcon
 } from '@mui/material';
 
 const noteStyles = {
@@ -34,8 +35,6 @@ const noteStyles = {
     }
   }
 }
-const iconStyles = { sx: { marginRight: 1 } }
-
 
 // Function to fetch agenda items
 const fetchAgendaItems = async (meetingId) => {
@@ -108,10 +107,10 @@ export default function MeetingNotes() {
 
   return (
     <Box>
-      <Typography 
-        variant="h4" 
+      <Typography
+        variant="h4"
         sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Agenda for {id}       
+        Agenda for {id}
         <Switch
           onChange={() => setHideDoneFlag(!hideDoneFlag)}
           defaultChecked={!hideDoneFlag}
@@ -135,7 +134,9 @@ export default function MeetingNotes() {
                 ((note.id === nextNoteId) ? noteStyles.nextNote :
                   (checkedNotes.includes(note.id)) ? noteStyles.closedNote : noteStyles.openNote).sx}
             >
-              {(checkedNotes.includes(note.id)) ? <CheckCircleOutlineIcon {...iconStyles} /> : <RadioButtonUncheckedIcon {...iconStyles} />}
+              <ListItemIcon>
+                {(checkedNotes.includes(note.id)) ? <CheckCircleOutlineIcon /> : <RadioButtonUncheckedIcon />}
+              </ListItemIcon>
 
               <ListItemText
                 primary={note.title}
@@ -143,7 +144,7 @@ export default function MeetingNotes() {
                   (note.id === nextNoteId) ? noteStyles.nextNote :
                     (checkedNotes.includes(note.id)) ? noteStyles.closedNote : noteStyles.openNote
                 }
-                
+
               />
             </ListItem>
           ))}
