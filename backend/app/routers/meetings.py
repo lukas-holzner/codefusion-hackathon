@@ -131,6 +131,11 @@ def read_meetings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     return meetings
 
 @router.get("/meetings/{meeting_id}", response_model=schemas.MeetingSchema)
+def read_meeting_route(meeting_id: int, db: Session = Depends(get_db)):
+    db_meeting = get_meeting(db, meeting_id=meeting_id)
+    if db_meeting is None:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    return db_meeting
 
 @router.put("/meetings/{meeting_id}", response_model=schemas.Meeting)
 def update_meeting_route(meeting_id: int, meeting: schemas.MeetingCreate, db: Session = Depends(get_db)):
