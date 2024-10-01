@@ -55,7 +55,7 @@ export const AppBar = ({ handleDrawerToggle, mobileOpen }) => {
 					{mobileOpen ? <CloseIcon /> : <MenuIcon />}
 				</IconButton>
 				<Typography variant="h6" noWrap component="div">
-					Meeting App
+                    Prep Me up Before i GO GO
 				</Typography>
                 <div className='UserSelector'>
                     <FormControl fullWidth>
