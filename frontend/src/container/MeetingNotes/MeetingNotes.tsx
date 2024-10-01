@@ -16,7 +16,7 @@ import {
   ListItemIcon
 } from '@mui/material';
 import { useUser } from '../../utils/userProvider';
-import { fetchConversation } from '../../utils/fetchRequests';
+import { fetchConversation, fetchMeetingDetails } from '../../utils/fetchRequests';
 
 const noteStyles = {
   nextNote: {
@@ -45,13 +45,18 @@ export default function MeetingNotes() {
   const [checkedNotes, setCheckedNotes] = useState<number[]>([])
   const [nextNoteId, setNextNoteId] = useState<number | undefined>(undefined)
 
-
   // Fetch agenda items
   const { data: _notes, isLoading, isError } = useQuery({
     queryKey: ['agendaItems', meetingId, userId],
     queryFn: () => fetchConversation({ meetingId: parseInt(meetingId ?? '0'), userId }),
     enabled: !!userId && !!meetingId,
   });
+
+  const { data: meetingDetails } = useQuery({
+		queryKey: ['meeting', meetingId],
+		queryFn: () => fetchMeetingDetails({ meetingId: parseInt(meetingId ?? '0') }),
+		enabled: !!meetingId,
+	});
 
   const notes = useMemo(() => _notes?.meeting_agenda.map(
     (item,index) => ({ id: index+1, title: item.agenda_item, done: item.completed }))
@@ -106,12 +111,12 @@ export default function MeetingNotes() {
   }
 
   return (
-    <Box>
+    <Box sx={{ marginTop: {xs: '32px', sm: '8px'}, padding: '16px' }}>
       <Typography
         variant="h4"
         gutterBottom
         sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Agenda for {meetingId}
+        Agenda for {meetingDetails?.title}
         <Switch
           onChange={() => setHideDoneFlag(!hideDoneFlag)}
           checked={!hideDoneFlag}
