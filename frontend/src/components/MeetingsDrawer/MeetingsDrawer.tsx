@@ -126,7 +126,7 @@ export const MeetingsDrawer = ({
 			<div>
 				<Toolbar />
 				<div className="ButtonWrapper">
-					<Button variant="outlined" href="#/prep-now">
+					<Button variant="outlined" href="#/create-meeting">
 						Create New Meeting
 					</Button>
 				</div>
