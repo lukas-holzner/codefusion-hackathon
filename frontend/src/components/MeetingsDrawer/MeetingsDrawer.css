@@ -1,7 +1,8 @@
 .ButtonWrapper {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     margin: 16px;
+    margin-left: 32px;
     margin-top: 32px;
 }
