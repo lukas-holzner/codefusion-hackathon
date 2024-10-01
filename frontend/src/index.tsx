@@ -41,7 +41,7 @@ const router = createHashRouter([
         ],
 			},
       {
-        path: '/prep-now',
+        path: '/create-meeting',
         element: <PrepNow />,
       }
 		],
